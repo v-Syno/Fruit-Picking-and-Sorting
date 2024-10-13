@@ -53,6 +53,11 @@ sign2 = imread('sign2.png'); % PPE sign
 surf([0.7, 1.7; 0.7, 1.7], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0.1], 'CData', sign1, 'FaceColor', 'texturemap'); % Robot sign protection
 surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0.1], 'CData', sign2, 'FaceColor', 'texturemap'); % PPE sign protection
 
+%% Grow Fruits
+
+orange = 'orange.ply';
+ObjectClass.PlaceObjects2(orange, [1,0.7,0.6], 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+ObjectClass.PlaceObjects2(orange, [0.1,0.4,0.05], 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 %% Place Robots
 
 UR3Location = transl(0,0,0.01) * trotz(pi/2);
