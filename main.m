@@ -55,9 +55,78 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 
 %% Grow Fruits
 
+
+% oranges on tree positions
+orangeTreePos = [
+    -1.5, 0.7, 0.8;
+    -1, 0.8, 0.9;
+    -1.3, 1, 1.3;
+    -0.9, 0.9, 1;    
+    ];
+
+% Define the orange file
+orangeFile = 'orange.ply';
+
+% Use a loop to place all oranges
+for i = 1:size(orangeTreePos, 1)
+    ObjectClass.PlaceObjects2(orangeFile, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+end
+
+% apples on tree positions
+
+appleTreePos = [
+    1, 0.7, 0.8;
+    1, 0.8, 0.9;
+    1.3, 1, 1.3;
+    0.9, 0.9, 1;    
+    ];
+
+% Define the orange file
+appleFile = 'orange.ply';
+
+% Use a loop to place all oranges
+for i = 1:size(appleTreePos, 1)
+    ObjectClass.PlaceObjects2(appleFile, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+end
+
+% unsorted box 
+unsortedPos = [
+    -0.3, 0.3, 0.08;
+    0.2, 0.5, 0.08;
+    -0.1, 0.4, 0.08;
+    0.35, 0.55, 0.08;
+    -0.05, 0.29, 0.08;
+    0.1, 0.38, 0.08;
+    -0.24, 0.34, 0.08;
+    0.19, 0.49, 0.08
+    ];
+
+% oranges sorting box 
+% x: -0.55 to -0.3
+% y: -0.2 to -0.9
+   orangeSorted = [
+       -0.48, -0.25, 0.08;
+       -0.35, -0.6, 0.08;
+       -0.5, -0.4, 0.08;
+       -0.4, -0.7, 0.08
+       ];
+
+   
+
+% apples sorting box
+appleSorted = [
+     0.48, -0.3. 0.08;
+     0.58, -0.4, 0.08;
+     0.4, -0.45, 0.08;
+     0.5, -0.25, 0.08
+    ];
+
+%% Place Robots
+=======
 orange = 'orange.ply';
 ObjectClass.PlaceObjects2(orange, [1,0.7,0.6], 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 ObjectClass.PlaceObjects2(orange, [0.1,0.4,0.05], 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
 
