@@ -65,3 +65,5 @@ UR3 = LinearUR3e(UR3Location);
 
 PandaLocation = transl(0,1,0.01) * trotz(pi/2);
 Panda = Panda(PandaLocation);
+
+%% Fruit Sorting
