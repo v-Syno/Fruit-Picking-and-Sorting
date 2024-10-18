@@ -136,141 +136,155 @@ classdef RobotClass
 
         end
 
-    function qEnd = MoveRobot2(robot, position, steps, payload, holdingObject, vertices, endEffDirection, g_1, g_2, grip, cow)
-        % Moves the robot to a specified location and handles object picking/placing if required
-        % Arguments:
-        %   robot - The robot model
-        %   position - The target position for the end effector
-        %   steps - Number of steps for the movement
-        %   payload - The object to be moved
-        %   holdingObject - Boolean, whether the robot is holding an object
-        %   vertices - Object vertices for visualization
-        %   endEffDirection - The direction the end effector should point
-        %   g_1, g_2 - Grippers for the robot (UR3-specific)
-        %   grip - Grip state (open/close)
-        %   cow - The cow object (for collision testing)
-    
-        % Initialize the emergency stop and control booleans
-        StoreSwitchButtons.setgeteStop(false);
-        StoreSwitchButtons.setgetManual(false);
-        StoreSwitchButtons.setgetCow(false);
-    
-        robotcount = 1;
+        function qEnd = MoveRobot(robot, position, steps, payload, holdingObject, vertices, varargin)
+            % MoveRobot moves the robot to a specified position with specified options.
+            % Arguments:
+            %   robot - The robot model.
+            %   position - The target position for the end effector [x, y, z].
+            %   steps - Number of steps for the movement.
+            %   payload - The object to be moved.
+            %   holdingObject - Boolean indicating if the robot is holding an object.
+            %   vertices - Vertices of the payload for visualization.
+            %   'endEffDirection' - Optional argument specifying the end-effector direction.
+            %                       Accepts 'up', 'down', 'left', 'right', 'forward', 'backward'.
+            %                       Default is 'down'.
         
-        % Define cow collision points
-        [Y, X] = meshgrid(-0.2:0.1:0.2, -0.4:0.1:0.4);
-        Z = repmat(0.25, size(X));
-        cubePoints = [X(:), Y(:), Z(:)];  % Base points for cow's bounding box
-        cubePoints = [cubePoints; cubePoints * rotx(pi/2); cubePoints * rotx(pi); cubePoints * rotx(3*pi/2); cubePoints * roty(pi/2); cubePoints * roty(-pi/2)];
-        cubePoints = cubePoints + repmat([-1, -0.7, -0.2], size(cubePoints, 1), 1);
-    
-        % Set the end effector orientation based on direction
-        switch endEffDirection
-            case 1
-                endMove = transl(position) * trotx(-pi/2);  % Towards positive Y axis
-            case 2
-                endMove = transl(position) * trotx(pi);  % Towards negative Z axis
-            case 3
-                endMove = transl(position) * trotx(pi/2);  % Towards negative Y axis
-            otherwise
-                endMove = transl(position) * troty(-pi/2);  % Towards positive X axis
-        end
-    
-        % Calculate joint configurations (q1 and q2)
-        q0 = robot.model.getpos();
-        q1 = robot.model.ikcon(robot.model.fkine(q0), q0);
-        q2 = robot.model.ikcon(endMove, q0);
-    
-        % Initialize collision functions
-        collF = CollisionFunctions();
-    
-        % Generate trajectory using trapezoidal velocity profile
-        s = lspb(0, 1, steps);
-        qMatrix = nan(steps, length(robot.model.links));
-        for i = 1:steps
-            qMatrix(i, :) = (1 - s(i)) * q1 + s(i) * q2;
-        end
-    
-        % Handle gripper open/close states
-        if grip == 1 || grip == 2
-            leftQopen = [deg2rad(-20), deg2rad(20), 0];
-            rightQopen = [deg2rad(20), deg2rad(-20), 0];
-            leftQclosed = [deg2rad(-30), deg2rad(30), 0];
-            rightQclosed = [deg2rad(30), deg2rad(-30), 0];
-            
-            if grip == 1
-                qPath1 = jtraj(rightQopen, rightQclosed, steps);
-                qPath2 = jtraj(leftQopen, leftQclosed, steps);
-            elseif grip == 2
-                qPath1 = jtraj(rightQclosed, rightQopen, steps);
-                qPath2 = jtraj(leftQclosed, leftQopen, steps);
-            end
-        end
-    
-        % Motion execution loop
-        for i = 1:steps
-            % Emergency stop handling
-            [eStopValue, ~] = RobotFunctions.Check_eStop(StoreSwitchButtons.setgeteStop, StoreSwitchButtons.setgetManual, StoreSwitchButtons.setgetCow);
-            if eStopValue
-                % Save robot and gripper positions
-                StopQs = [robot.model.getpos(), g_1.model.getpos(), g_2.model.getpos()];
-                RobotFunctions.eStop(StopQs, robotcount, cow);
-                disp('Emergency stop triggered!');
-                break;
-            end
-    
-            % Cow collision check
-            if StoreSwitchButtons.setgetCow()
-                cow.model.base = transl(1, -0.5, 0.01);
-                cow.model.animate(cow.model.getpos());
-                drawnow;
-                cowCheck = collF.lightcurtainCheck(cow);
-                if cowCheck
-                    StoreSwitchButtons.setgeteStop(true);
+            % Default values for options
+            endEffDirection = 'down';  % Default end-effector direction
+        
+            % Parse optional arguments
+            if nargin > 6
+                for i = 1:2:length(varargin)
+                    switch lower(varargin{i})
+                        case 'endeffdirection'
+                            endEffDirection = validatestring(varargin{i + 1}, ...
+                                {'up', 'down', 'left', 'right', 'forward', 'backward'});
+                        otherwise
+                            error('Unknown parameter: %s', varargin{i});
+                    end
                 end
-                StoreSwitchButtons.setgetCow(false);
             end
-    
-            % Self, ground, and cow collision checks
-            selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
-            groundCheck = collF.collisionGroundLPI(robot);
-            cowCheck = collF.collisionCheckCow(robot, cow);
-    
-            if selfCheck || groundCheck == 1 || cowCheck
-                disp('Collision detected! Adjusting path...');
-                % Generate avoidance trajectory and update qMatrix
-                newQMatrix = collF.remakeTraj(robot, 10, steps, q2);  % Re-plan trajectory to avoid collision
-                qMatrix = newQMatrix;
-                i = 1;  % Restart loop to execute new trajectory
-                continue;
+        
+            % Determine the transformation based on end-effector direction
+            switch endEffDirection
+                case 'up'
+                    endMove = transl(position) * trotx(-pi/2);
+                case 'down'
+                    endMove = transl(position) * trotx(pi);
+                case 'left'
+                    endMove = transl(position) * troty(pi/2);
+                case 'right'
+                    endMove = transl(position) * troty(-pi/2);
+                case 'forward'
+                    endMove = transl(position) * trotx(0); % Point along x-axis
+                case 'backward'
+                    endMove = transl(position) * trotx(pi);
             end
-    
-            % Robot and gripper animation
-            robot.model.animate(qMatrix(i, :));
-            pos1 = robot.model.fkineUTS(robot.model.getpos()) * transl(0, -0.0127, 0.05) * troty(-pi/2);
-            pos2 = robot.model.fkineUTS(robot.model.getpos()) * transl(0, 0.0127, 0.05) * troty(-pi/2);
-            
-            g_1.model.base = pos1;
-            g_2.model.base = pos2;
-            g_1.model.animate(g_1.model.getpos());
-            g_2.model.animate(g_2.model.getpos());
-    
-            if grip == 1 || grip == 2
-                g_1.model.animate(qPath1(i, :));
-                g_2.model.animate(qPath2(i, :));
+        
+            % Initial robot position and configuration
+            q0 = robot.model.getpos();
+            q1 = robot.model.ikcon(robot.model.fkine(q0), q0);
+            q2 = robot.model.ikcon(endMove, q0);
+        
+            % Trajectory generation using trapezoidal velocity profile
+            s = lspb(0, 1, steps);  % Scalar function for smooth trajectory
+            qMatrix = nan(steps, length(robot.model.links));  % Preallocate memory for the trajectory
+            for i = 1:steps
+                qMatrix(i, :) = (1 - s(i)) * q1 + s(i) * q2;
             end
-    
-            % Update object vertices if holding an object
-            if holdingObject
-                transMatrix = robot.model.fkine(qMatrix(i, :)).T * transl(0, 0, 0.2);
-                transformedVertices = [vertices, ones(size(vertices, 1), 1)] * transMatrix';
-                set(payload, 'Vertices', transformedVertices(:, 1:3));
+        
+            % Initialize collision detection
+            collF = CollisionClass();
+        
+            % Motion execution loop
+            for i = 1:steps
+                % Check for collisions with self, ground, or other objects (e.g., cow)
+                selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
+                groundCheck = collF.collisionGroundLPI(robot);
+                
+                % If any collision is detected, recompute the trajectory to avoid
+                if selfCheck || groundCheck == 1
+                    disp('Collision detected! Adjusting path...');
+                    newQMatrix = collF.remakeTraj(robot, 10, steps, q2);  % Re-plan trajectory to avoid collision
+                    qMatrix = newQMatrix;
+                    i = 1;  % Restart loop with new trajectory
+                    continue;
+                end
+        
+                % Animate the robot along the trajectory
+                robot.model.animate(qMatrix(i, :));
+        
+                % Update object vertices if holding an object
+                if holdingObject
+                    transMatrix = robot.model.fkine(qMatrix(i, :)).T * transl(0, 0, 0.2);
+                    transformedVertices = [vertices, ones(size(vertices, 1), 1)] * transMatrix';
+                    set(payload, 'Vertices', transformedVertices(:, 1:3));
+                end
+        
+                drawnow();  % Update the animation
             end
-    
-            drawnow();
-        end
-        qEnd = qMatrix(end, :);  % Return the final configuration
+        
+            % Return the final joint configuration
+            qEnd = qMatrix(end, :);
         end
 
+        function GripperMove(g1, g2, varargin)
+            % GripperMove controls the opening and closing of a gripper using two gripper models (g1 and g2).
+            % Arguments:
+            %   g1 - The first gripper model.
+            %   g2 - The second gripper model.
+            %   'goal' - Specify 'open' or 'close' as a string, or true/false as a logical.
+            %            - 'open' or true will open the gripper.
+            %            - 'close' or false will close the gripper.
+            %            - Default is 'close' if not specified.
+        
+            gsteps = 20;  % Number of steps for the movement.
+        
+            % Define initial open and closed states for the grippers.
+            Initial_leftQopen = zeros(1, 3);
+            Initial_rightQopen = zeros(1, 3);
+            Initial_leftQclosed = [deg2rad(-20), deg2rad(20), 0];
+            Initial_rightQclosed = [deg2rad(20), deg2rad(-20), 0];
+        
+            % Set default goal to 'close'
+            goal = 'open';
+        
+            % Parse input arguments for the goal
+            if nargin > 2
+                inputGoal = varargin{1};
+                if ischar(inputGoal)
+                    % If the goal is provided as 'open' or 'close'
+                    goal = validatestring(inputGoal, {'open', 'close'});
+                elseif islogical(inputGoal)
+                    % If the goal is provided as true or false
+                    if inputGoal
+                        goal = 'open';
+                    else
+                        goal = 'close';
+                    end
+                else
+                    error('Invalid goal input. Use ''open'', ''close'', true, or false.');
+                end
+            end
+        
+            % Generate the joint trajectories for the grippers based on the goal.
+            if strcmp(goal, 'close')
+                % Close Gripper
+                qPath1 = jtraj(Initial_rightQopen, Initial_rightQclosed, gsteps);
+                qPath2 = jtraj(Initial_leftQopen, Initial_leftQclosed, gsteps);
+            elseif strcmp(goal, 'open')
+                % Open Gripper
+                qPath1 = jtraj(Initial_rightQclosed, Initial_rightQopen, gsteps);
+                qPath2 = jtraj(Initial_leftQclosed, Initial_leftQopen, gsteps);
+            end
+        
+            % Animate the gripper movements.
+            for i = 1:gsteps
+                g1.model.animate(qPath1(i, :));
+                g2.model.animate(qPath2(i, :));                
+                drawnow();
+                pause(0.001);  % Small pause for smooth animation.
+            end
+        end
     end
 end
