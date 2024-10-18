@@ -13,7 +13,7 @@ classdef CollisionClass
     end
 
     methods
-        function self = CollisionFunctions() 
+        function self = CollisionClass() 
             % Constructor to initialize any properties if needed in the future
         end
 
@@ -140,6 +140,76 @@ classdef CollisionClass
             result = place * ([0.34^-2, 0.2^-2, 0.22^-2] .* eye(3)) * place';
 
             outp = result <= 1; % Return true if collision detected
+        end
+    
+        function check = collisionGroundLPI(self, robot)
+            planeNormal = [0,0,1];
+            pointOnPlane = [0,0,0];
+            if (strcmp(robot.plyFileNameStem, 'ColouredPanda'))
+                QAgrip1 = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,-0.127,0.215);
+                QAgrip2 = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,0.127,0.215);
+                point1 = [QAgrip1(1,4), QAgrip1(2,4), QAgrip1(3,4)];
+                point2 = [QAgrip2(1,4), QAgrip2(2,4), QAgrip2(3,4)];
+            end
+            if (strcmp(robot.plyFileNameStem, 'LinearUR3'))
+                harvestGrip1 = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,0.127,0.2312);
+                harvestGrip2 = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,-0.127,0.2312);
+                point1 = [harvestGrip1(1,4), harvestGrip1(2,4), harvestGrip1(3,4)];
+                point2 = [harvestGrip2(1,4), harvestGrip2(2,4), harvestGrip2(3,4)];
+            end
+            u = point2 - point1;
+            w = point1 - pointOnPlane;
+            D = dot(planeNormal,u);
+            N = -dot(planeNormal,w);
+
+            check = 0; %#ok<NASGU>
+            if abs(D) < 10^-7        % The segment is parallel to plane
+                if N == 0           % The segment lies in plane
+                    check = 2;
+                    return
+                else
+                    check = 0;       %no intersection
+                    return
+                end
+            end
+
+            %compute the intersection parameter
+            sI = N / D;
+%             intersectionPoint = point1OnLine + sI.*u; % not needed
+
+            if (sI < 0 || sI > 1)
+                check= 3;          %The intersection point  lies outside the segment, so there is no intersection
+            else
+                check=1;
+            end
+        end
+    
+        function qMat = remakeTraj(self, robot, sideSteps, steps, q2)
+            % using basic RRT
+            poseA = robot.model.getpos();
+            
+            qRand = poseA + .11*(2 * rand(1,length(robot.model.links)) - 1) * pi/8;
+           
+            if strcmp(robot.plyFileNameStem, 'LinearUR3')
+                qRand(1) = poseA(1);
+            end 
+            planner = self.collisionCheckSelf(robot, qRand);
+            trials = 0;
+            while planner == true
+                qRand = poseA + .11*(2 * rand(1,length(robot.model.links)) - 1) * pi/8;
+                if strcmp(robot.plyFileNameStem, 'LinearUR3')
+                    qRand(1) = poseA(1);
+                end
+                planner = self.collisionCheckSelf(robot, qRand);
+                trials = trials +1
+            end
+            avoidPoseA = qRand;
+            s1 = lspb(0,1,sideSteps);
+            firstqMatrix = (1-s1)*poseA + s1*avoidPoseA;
+            s2 = lspb(0,1, steps - sideSteps);
+            secondqMatrix = (1-s2)*firstqMatrix(sideSteps, :) + s2*q2;
+            qMat = [firstqMatrix; secondqMatrix];
+
         end
     end
 end
