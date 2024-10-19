@@ -63,31 +63,31 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 %% Grow Fruits
 
 % Define fruits
-tomato = 'tomato.ply';
-potato = 'potato.ply';
+tomato = 'orange.ply';
+apple = 'orange.ply';
 
-% tomatoes on tree positions
-tomatoTreePos = [
+% oranges (place holder for tomatoes) on tree positions
+orangeTreePos = [
     -0.5, 0.75, 0.3;
     -0.4,0.7 0.25;
     0.5,0.7, 0.15;    
     ];
 
-% Use a loop to place all tomatoes
-for i = 1:size(tomatoTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+% Use a loop to place all oranges
+for i = 1:size(orangeTreePos, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
-% potatoes in soil positions
-potatoTreePos = [
+% apples(place holder for potatoes) on tree positions
+appleTreePos = [
     0, 1, 0.03;
     -0.2, 0.8, 0.03;
     0.2, 1.3, 0.03;    
     ];
 
-% Use a loop to place all potatoes
-for i = 1:size(potatoTreePos, 1)
-    ObjectClass.PlaceObjects2(potato, potatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+% Use a loop to place all apples
+for i = 1:size(appleTreePos, 1)
+    ObjectClass.PlaceObjects2(apple, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % unsorted box 
@@ -98,6 +98,8 @@ unsortedPos = [
     0.35, 0.55, 0.08;
     -0.05, 0.29, 0.08;
     0.1, 0.38, 0.08;
+    -0.24, 0.34, 0.08;
+    0.19, 0.49, 0.08
     ];
 
 % oranges sorting box 
@@ -120,20 +122,25 @@ appleSorted = [
 
 %% Testing
 
-tomato = 'potato.ply';
+tomato = 'tomato.ply';
+potato = 'potato.ply';
 
-orangeTreePosTest = [
-    -0.6, 0.8, 0.8
-    -0.6, 0.8, 0.9
+tomatoPosTest = [
+    -0.4, 1, 0.01
+    -0.6, 0.8, 0.01
     ];
 
-unsortedPosTest = [
-    -0.3, 0.3, 0.08;
-    0.2, 0.5, 0.08;
+potatoPosTest = [
+    -0.3, 0.3, 0.01;
+    0.2, 0.5, 0.01;
     ];
 
-for i = 1:size(orangeTreePosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+for i = 1:size(tomatoPosTest, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+end
+
+for i = 1:size(potatoPosTest, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(potato, potatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
@@ -141,14 +148,14 @@ end
 steps = 50;
 
 % Initialize robots and their respective collision functions
-pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
+%pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
 ur3Robot = LinearUR3e(transl(0.3,0.5,0.01) );
 
 %% Tree harvesting - Orange
 
-for i = 1:size(orangeTreePosTest, 1)
+for i = 1:size(tomatoPosTest, 1)
     % Step 1: Move to the position of the orange on the tree
-    poseOrange = orangeTreePosTest(i, :);
+    poseOrange = tomatoPosTest(i, :);
     RobotClass.MoveObject(pandaRobot, poseOrange, steps, orangeObject{i}, orangeVertices{i}, false,1);
 
     % Step 2: Lower the end effector to the orange
