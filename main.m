@@ -63,31 +63,31 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 %% Grow Fruits
 
 % Define fruits
-orange = 'orange.ply';
-apple = 'orange.ply';
+tomato = 'tomato.ply';
+potato = 'potato.ply';
 
-% oranges (place holder for tomatoes) on tree positions
-orangeTreePos = [
+% tomatoes on tree positions
+tomatoTreePos = [
     -0.5, 0.75, 0.3;
     -0.4,0.7 0.25;
     0.5,0.7, 0.15;    
     ];
 
-% Use a loop to place all oranges
-for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+% Use a loop to place all tomatoes
+for i = 1:size(tomatoTreePos, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
-% apples(place holder for potatoes) on tree positions
-appleTreePos = [
+% potatoes in soil positions
+potatoTreePos = [
     0, 1, 0.03;
     -0.2, 0.8, 0.03;
     0.2, 1.3, 0.03;    
     ];
 
-% Use a loop to place all apples
-for i = 1:size(appleTreePos, 1)
-    ObjectClass.PlaceObjects2(apple, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+% Use a loop to place all potatoes
+for i = 1:size(potatoTreePos, 1)
+    ObjectClass.PlaceObjects2(potato, potatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % unsorted box 
@@ -98,8 +98,6 @@ unsortedPos = [
     0.35, 0.55, 0.08;
     -0.05, 0.29, 0.08;
     0.1, 0.38, 0.08;
-    -0.24, 0.34, 0.08;
-    0.19, 0.49, 0.08
     ];
 
 % oranges sorting box 
@@ -122,7 +120,7 @@ appleSorted = [
 
 %% Testing
 
-orange = 'orange.ply';
+tomato = 'potato.ply';
 
 orangeTreePosTest = [
     -0.6, 0.8, 0.8
@@ -135,7 +133,7 @@ unsortedPosTest = [
     ];
 
 for i = 1:size(orangeTreePosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
