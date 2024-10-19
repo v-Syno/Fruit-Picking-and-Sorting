@@ -144,7 +144,7 @@ steps = 50;
 
 % Initialize robots and their respective collision functions
 pandaRobot = Panda(transl(0,1,0.01) * trotz(pi/2));
-ur3Robot = LinearUR3e(transl(0,0.5,0.01) * trotz(pi/2));
+ur3Robot = LinearUR3e(transl(0,0,0.01) * trotz(pi/2));
 
 %% Tree harvesting - Orange
 
