@@ -30,16 +30,18 @@ surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wal
 
 % Trees
 tree = 'treetiny.ply';
-ObjectClass.PlaceObjects2(tree, [-0.9,1.25,0.01], 'Scale', [1,1,2.5]);
-ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6]);
+ObjectClass.PlaceObjects2(tree, [-0.5,1,0.01], 'Scale', [3.5,3.5,1.5]); % left tree (big)
+ObjectClass.PlaceObjects2(tree, [0.5,0.8,0.01], 'Scale', [2, 2, 0.6]); % right tree (small)
 
 % Boxes
 crate = 'crate.ply';
 fruitCrate = crate;
 vegCrate = crate;
-ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % TEMP storage create
-ObjectClass.PlaceObjects2(fruitCrate, [-0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]); 
-ObjectClass.PlaceObjects2(vegCrate, [0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]);
+ObjectClass.PlaceObjects2(crate, [0,0.05,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
+ObjectClass.PlaceObjects2(fruitCrate, [-0.5,-0.5,0.05], 'Scale', [0.5,1,0.5]); % fruit
+ObjectClass.PlaceObjects2(vegCrate, [0.5,-0.5,0.05], 'Scale', [0.5,1,0.5]);% veg
+
+% add image of fruit/veg on each sorted crate
 
 % Cows
 
@@ -64,12 +66,11 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 orange = 'orange.ply';
 apple = 'orange.ply';
 
-% oranges on tree positions
+% oranges (place holder for tomatoes) on tree positions
 orangeTreePos = [
-    -1.5, 0.7, 0.8;
-    -1, 0.8, 0.9;
-    -1.3, 1, 1.3;
-    -0.9, 0.9, 1;    
+    -0.5, 0.75, 0.3;
+    -0.4,0.7 0.25;
+    0.5,0.7, 0.15;    
     ];
 
 % Use a loop to place all oranges
@@ -77,12 +78,11 @@ for i = 1:size(orangeTreePos, 1)
     [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
-% apples on tree positions
+% apples(place holder for potatoes) on tree positions
 appleTreePos = [
-    1, 0.7, 0.8;
-    1, 0.8, 0.9;
-    1.3, 1, 1.3;
-    0.9, 0.9, 1;    
+    0, 1, 0.03;
+    -0.2, 0.8, 0.03;
+    0.2, 1.3, 0.03;    
     ];
 
 % Use a loop to place all apples
@@ -143,8 +143,8 @@ end
 steps = 50;
 
 % Initialize robots and their respective collision functions
-pandaRobot = Panda(transl(0.5,-0.25,0.01) * trotz(pi/2));
-ur3Robot = LinearUR3e(transl(0.5,0.5,0.01) );
+pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
+ur3Robot = LinearUR3e(transl(0.3,0.5,0.01) );
 
 %% Tree harvesting - Orange
 
