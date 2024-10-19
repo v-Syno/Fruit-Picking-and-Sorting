@@ -41,7 +41,7 @@ classdef RobotClass
             % gripper = Gripper();
     
             q0 = robot.model.getpos(); % get current joint poses
-            T_EE = transl(pose); % rotate 180 deg so that the Z axis points down
+            T_EE = transl(pose) * trotx(pi); % rotate 180 deg so that the Z axis points down
             qGoal = robot.model.ikcon(T_EE,q0); %obtain needed joints for goal
 
             if method == 1
@@ -96,7 +96,7 @@ classdef RobotClass
             
         
             q0 = robot.model.getpos(); % Get current joint poses
-            T_EE = pose; % Using the provided end-effector pose
+            T_EE = transl(pose); % Using the provided end-effector pose
             qGoal = robot.model.ikcon(T_EE, q0); % Compute joint configuration for the goal
         
             qMatrix = jtraj(q0,qGoal,steps);

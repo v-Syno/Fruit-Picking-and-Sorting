@@ -75,7 +75,7 @@ orangeTreePos = [
 
 % Use a loop to place all oranges
 for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [tomatoObject, tomatoVertices] = Fruit.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % apples(place holder for potatoes) on tree positions
@@ -135,12 +135,14 @@ potatoPosTest = [
     0.2, 0.5, 0.01;
     ];
 
+testPose = [0,0,0.01];
+
 for i = 1:size(tomatoPosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [tomatoObject, tomatoVertices] = Fruit.PlaceObjects2(tomato, tomatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 for i = 1:size(potatoPosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(potato, potatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [potatoObject, potatoVertices] = Fruit.PlaceObjects2(potato, potatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
@@ -148,26 +150,35 @@ end
 steps = 50;
 
 % Initialize robots and their respective collision functions
-%pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
-ur3Robot = LinearUR3e(transl(0.3,0.5,0.01) );
+%sortingBot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
+harvesterBot = LinearUR3e(transl(0.3,0.5,0.01) );
 
-%% Tree harvesting - Orange
+%% Harvesting
+
+% if potato, EE needs to point down
+% if tomato, EE needs to point staight, then when placing, move down
 
 for i = 1:size(tomatoPosTest, 1)
-    % Step 1: Move to the position of the orange on the tree
-    poseOrange = tomatoPosTest(i, :);
-    RobotClass.MoveObject(pandaRobot, poseOrange, steps, orangeObject{i}, orangeVertices{i}, false,1);
+    % Step 1: Move to the position of the object
+    poseTomato = tomatoPosTest(i, :);
+    RobotClass.MoveObject2(harvesterBot, poseTomato, steps, tomatoObject{i}, tomatoVertices{i}, false);
 
-    % Step 2: Lower the end effector to the orange
+    % Step 2: Lower the end effector to the object
+    poseTomato = tomatoPosTest(i, :);
+    RobotClass.MoveObject2(harvesterBot, poseTomato, steps, tomatoObject{i}, tomatoVertices{i}, false);
 
-    % Step 3: Close the gripper to grip the orange
+    % Step 3: Pick up the Object
+    RobotClass.MoveObject2(harvesterBot, poseTomato, steps, tomatoObject{i}, tomatoVertices{i}, true); % now grip object
+    
+    % Step 4: Move to target location
+    targetPose = testPose(i,:) + [0,0,0.2];
+    RobotClass.MoveObject2(harvesterBot, targetPose, steps, tomatoObject{i}, tomatoVertices{i}, true); % maintain grip
 
-    % Step 4: Lift the orange back up slightly
+    % Step 5: Lower to position
+    targetPose = testPose(i,:);
+    RobotClass.MoveObject2(harvesterBot, targetPose, steps, tomatoObject{i}, tomatoVertices{i}, true); % maintain grip
 
-    % Step 5: Move the orange to the unsorted box position
-
-    % Step 6: Lower the orange into the unsorted box
-
-    % Step 8: Move back to a neutral position (above the unsorted box)
+    % Step 6: Release grip
+    RobotClass.MoveObject2(harvesterBot, targetPose, steps, tomatoObject{i}, tomatoVertices{i}, false); % maintain grip
 
 end
