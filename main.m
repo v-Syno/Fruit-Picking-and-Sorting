@@ -32,7 +32,7 @@ ObjectClass.PlaceObjects2(tree, [-0.9,1.25,0.01], 'Scale', [1,1,2.5], 'Rotate', 
 ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6], 'Rotate', [0, 0, 0]);
 
 % Boxes
-crate = 'crate.ply';
+crate = 'untitled.ply';
 appleCrate = 'apple_crate.ply';
 orangeCrate = 'orange_crate.ply';
 ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % TEMP storage create
