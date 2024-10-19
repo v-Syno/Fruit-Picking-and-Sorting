@@ -63,7 +63,7 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 %% Grow Fruits
 
 % Define fruits
-orange = 'orange.ply';
+tomato = 'orange.ply';
 apple = 'orange.ply';
 
 % oranges (place holder for tomatoes) on tree positions
@@ -75,7 +75,7 @@ orangeTreePos = [
 
 % Use a loop to place all oranges
 for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % apples(place holder for potatoes) on tree positions
@@ -122,20 +122,25 @@ appleSorted = [
 
 %% Testing
 
-orange = 'orange.ply';
+tomato = 'tomato.ply';
+potato = 'potato.ply';
 
-orangeTreePosTest = [
-    -0.6, 0.8, 0.8
-    -0.6, 0.8, 0.9
+tomatoPosTest = [
+    -0.4, 1, 0.01
+    -0.6, 0.8, 0.01
     ];
 
-unsortedPosTest = [
-    -0.3, 0.3, 0.08;
-    0.2, 0.5, 0.08;
+potatoPosTest = [
+    -0.3, 0.3, 0.01;
+    0.2, 0.5, 0.01;
     ];
 
-for i = 1:size(orangeTreePosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+for i = 1:size(tomatoPosTest, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+end
+
+for i = 1:size(potatoPosTest, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(potato, potatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
@@ -143,14 +148,14 @@ end
 steps = 50;
 
 % Initialize robots and their respective collision functions
-pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
+%pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
 ur3Robot = LinearUR3e(transl(0.3,0.5,0.01) );
 
 %% Tree harvesting - Orange
 
-for i = 1:size(orangeTreePosTest, 1)
+for i = 1:size(tomatoPosTest, 1)
     % Step 1: Move to the position of the orange on the tree
-    poseOrange = orangeTreePosTest(i, :);
+    poseOrange = tomatoPosTest(i, :);
     RobotClass.MoveObject(pandaRobot, poseOrange, steps, orangeObject{i}, orangeVertices{i}, false,1);
 
     % Step 2: Lower the end effector to the orange
