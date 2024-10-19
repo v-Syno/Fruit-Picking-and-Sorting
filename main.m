@@ -9,7 +9,7 @@ close all;
 set(0,'DefaultFigureWindowStyle','docked')
 view(3)
 
-Fruit = ObjectClass();
+FruitnVeg = ObjectClass();
 RobotControl = RobotClass();
 
 %% Setup environment
@@ -25,7 +25,7 @@ soil = imread ('soil.jpg'); % Soil Image
 wall = imread ('sky.PNG'); % wall Image
 
 surf([-1.8,-1.8;1.8,1.8],[-1.8,1.8;-1.8,1.8],[0.01,0.01;0.01,0.01] ,'CData',floor ,'FaceColor','texturemap'); %Floor
-surf([-1.8,-1.8;1.8,1.8],[0.8,1.5;0.8,1.5],[0.01,0.01;0.01,0.02] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
+surf([-1.1,-1.1;1.1,1.1],[0.8,1.5;0.8,1.5],[0.011,0.011;0.011,0.011] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
 surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wall ,'FaceColor','texturemap'); % Back wall (y = 1.8)
 
 % Trees
@@ -37,7 +37,7 @@ ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6]);
 crate = 'crate.ply';
 fruitCrate = crate;
 vegCrate = crate;
-ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % TEMP storage create
+ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]);
 ObjectClass.PlaceObjects2(fruitCrate, [-0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]); 
 ObjectClass.PlaceObjects2(vegCrate, [0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]);
 
@@ -60,9 +60,9 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 
 %% Grow Fruits
 
-% Define fruits
-orange = 'orange.ply';
-apple = 'orange.ply';
+% Define fruit and veg
+fruit = 'orange.ply';
+veg = 'orange.ply';
 
 % oranges on tree positions
 orangeTreePos = [
@@ -74,7 +74,7 @@ orangeTreePos = [
 
 % Use a loop to place all oranges
 for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(fruit, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % apples on tree positions
@@ -87,7 +87,7 @@ appleTreePos = [
 
 % Use a loop to place all apples
 for i = 1:size(appleTreePos, 1)
-    ObjectClass.PlaceObjects2(apple, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    ObjectClass.PlaceObjects2(veg, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % unsorted box 
@@ -122,7 +122,7 @@ appleSorted = [
 
 %% Testing
 
-orange = 'orange.ply';
+fruit = 'potato.ply';
 
 orangeTreePosTest = [
     -0.6, 0.8, 0.8
@@ -135,7 +135,7 @@ unsortedPosTest = [
     ];
 
 for i = 1:size(orangeTreePosTest, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(orange, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(fruit, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
@@ -144,7 +144,7 @@ steps = 50;
 
 % Initialize robots and their respective collision functions
 pandaRobot = Panda(transl(0.5,-0.25,0.01) * trotz(pi/2));
-ur3Robot = LinearUR3e(transl(0.5,0.5,0.01) );
+ur3Robot = LinearUR3e(transl(0.5,0.5,0.01));
 
 %% Tree harvesting - Orange
 
