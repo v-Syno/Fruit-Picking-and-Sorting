@@ -34,7 +34,7 @@ ObjectClass.PlaceObjects2(tree, [-0.9,1.25,0.01], 'Scale', [1,1,2.5], 'Rotate', 
 ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6], 'Rotate', [0, 0, 0]);
 
 % Boxes
-crate = 'untitled.ply';
+crate = 'crate.ply';
 appleCrate = 'apple_crate.ply';
 orangeCrate = 'orange_crate.ply';
 ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % TEMP storage create
@@ -144,7 +144,7 @@ steps = 50;
 
 % Initialize robots and their respective collision functions
 pandaRobot = Panda(transl(0,1,0.01) * trotz(pi/2));
-ur3Robot = LinearUR3e(transl(0,0.5,0.01) * trotz(pi/2));
+ur3Robot = LinearUR3e(transl(0,0,0.01) * trotz(pi/2));
 
 %% Tree harvesting - Orange
 
