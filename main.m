@@ -63,62 +63,58 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 %% Grow Fruits
 
 % Define fruits
-tomato = 'orange.ply';
-apple = 'orange.ply';
+tomato = 'tomato.ply';
+potato = 'potato.ply';
 
 % oranges (place holder for tomatoes) on tree positions
-orangeTreePos = [
+tomatoTreePos = [
     -0.5, 0.75, 0.3;
     -0.4,0.7 0.25;
-    0.5,0.7, 0.15;    
+    0.5,0.7, 0.09;    
     ];
 
 % Use a loop to place all oranges
-for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+for i = 1:size(tomatoTreePos, 1)
+    [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % apples(place holder for potatoes) on tree positions
-appleTreePos = [
+potatoTreePos = [
     0, 1, 0.03;
-    -0.2, 0.8, 0.03;
+    -0.2, 0.9, 0.03;
     0.2, 1.3, 0.03;    
     ];
 
 % Use a loop to place all apples
-for i = 1:size(appleTreePos, 1)
-    ObjectClass.PlaceObjects2(apple, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+for i = 1:size(potatoTreePos, 1)
+    ObjectClass.PlaceObjects2(potato, potatoTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % unsorted box 
 unsortedPos = [
-    -0.3, 0.3, 0.08;
-    0.2, 0.5, 0.08;
-    -0.1, 0.4, 0.08;
-    0.35, 0.55, 0.08;
-    -0.05, 0.29, 0.08;
-    0.1, 0.38, 0.08;
-    -0.24, 0.34, 0.08;
-    0.19, 0.49, 0.08
+    -0.15, 0.12, 0.015;
+    0, 0.12, 0.015;
+    0.15, 0.12, 0.015;
+    -0.15, -0.02, 0.015;
+    0, -0.02, 0.015;
+    0.15, -0.02, 0.015;
     ];
 
 % oranges sorting box 
 % x: -0.55 to -0.3
 % y: -0.2 to -0.9
 orangeSorted = [
-       -0.48, -0.25, 0.08;
-       -0.35, -0.6, 0.08;
-       -0.5, -0.4, 0.08;
-       -0.4, -0.7, 0.08
-       ];
+   -0.5, -0.35, 0.015;
+   -0.5, -0.5, 0.015;
+   -0.5, -0.65, 0.015;
+   ];
 
 % apples sorting box
 appleSorted = [
-     0.48, -0.3, 0.08;
-     0.58, -0.4, 0.08;
-     0.4, -0.45, 0.08;
-     0.5, -0.25, 0.08
-    ];
+   0.5, -0.35, 0.015;
+   0.5, -0.5, 0.015;
+   0.5, -0.65, 0.015;
+   ];
 
 %% Testing
 
@@ -126,14 +122,22 @@ tomato = 'tomato.ply';
 potato = 'potato.ply';
 
 tomatoPosTest = [
-    -0.4, 1, 0.01
-    -0.6, 0.8, 0.01
+%     -0.4, 1, 0.01
+%     -0.6, 0.8, 0.01
+%     ];
+% [
+    -0.15, 0.12, 0.015;
+    0, 0.12, 0.015;
+    0.15, 0.12, 0.015;
+    -0.15, -0.02, 0.015;
+    0, -0.02, 0.015;
+    0.15, -0.02, 0.015;
     ];
 
-potatoPosTest = [
-    -0.3, 0.3, 0.01;
-    0.2, 0.5, 0.01;
-    ];
+% potatoPosTest = [
+%     -0.3, 0.3, 0.01;
+%     0.2, 0.5, 0.01;
+%     ];
 
 for i = 1:size(tomatoPosTest, 1)
     [orangeObject, orangeVertices] = Fruit.PlaceObjects2(tomato, tomatoPosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
@@ -148,7 +152,7 @@ end
 steps = 50;
 
 % Initialize robots and their respective collision functions
-%pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
+pandaRobot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
 ur3Robot = LinearUR3e(transl(0.3,0.5,0.01) );
 
 %% Tree harvesting - Orange
