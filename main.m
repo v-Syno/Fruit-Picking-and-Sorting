@@ -25,21 +25,21 @@ soil = imread ('soil.jpg'); % Soil Image
 wall = imread ('sky.PNG'); % wall Image
 
 surf([-1.8,-1.8;1.8,1.8],[-1.8,1.8;-1.8,1.8],[0.01,0.01;0.01,0.01] ,'CData',floor ,'FaceColor','texturemap'); %Floor
-surf([-1.8,-1.8;1.8,1.8],[0.8,1.5;0.8,1.5],[0.01,0.01;0.01,0.01] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
+surf([-1.8,-1.8;1.8,1.8],[0.8,1.5;0.8,1.5],[0.01,0.01;0.01,0.02] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
 surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wall ,'FaceColor','texturemap'); % Back wall (y = 1.8)
 
 % Trees
 tree = 'treetiny.ply';
-ObjectClass.PlaceObjects2(tree, [-0.9,1.25,0.01], 'Scale', [1,1,2.5], 'Rotate', [0, 0, 0]);
-ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6], 'Rotate', [0, 0, 0]);
+ObjectClass.PlaceObjects2(tree, [-0.9,1.25,0.01], 'Scale', [1,1,2.5]);
+ObjectClass.PlaceObjects2(tree, [0.9,1.25,0.01], 'Scale', [0.5, 0.5, 0.6]);
 
 % Boxes
-crate = 'untitled.ply';
-appleCrate = 'apple_crate.ply';
-orangeCrate = 'orange_crate.ply';
+crate = 'crate.ply';
+fruitCrate = crate;
+vegCrate = crate;
 ObjectClass.PlaceObjects2(crate, [0,0.5,0.05], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % TEMP storage create
-ObjectClass.PlaceObjects2(appleCrate, [-0.45,-0.5,0.01], 'Scale', [1,1,1], 'Rotate', [0, 0, pi/2]); 
-ObjectClass.PlaceObjects2(appleCrate, [0.45,-0.5,0.01], 'Scale', [1,1,1], 'Rotate', [0, 0, pi/2]);
+ObjectClass.PlaceObjects2(fruitCrate, [-0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]); 
+ObjectClass.PlaceObjects2(vegCrate, [0.45,-0.5,0.05], 'Scale', [0.5,1,0.5]);
 
 % Cows
 
