@@ -61,8 +61,8 @@ surf([-0.75, 0.25; -0.75, 0.25], [-1.26, -1.26; -1.26, -1.26], [0.5, 0.5; 0.1, 0
 %% Grow Fruits
 
 % Define fruit and veg
-fruit = 'orange.ply';
-veg = 'orange.ply';
+tomato = 'tomato.ply';
+potato = 'potato.ply';
 
 % oranges on tree positions
 orangeTreePos = [
@@ -74,7 +74,7 @@ orangeTreePos = [
 
 % Use a loop to place all oranges
 for i = 1:size(orangeTreePos, 1)
-    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(fruit, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(tomato, orangeTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % apples on tree positions
@@ -87,7 +87,7 @@ appleTreePos = [
 
 % Use a loop to place all apples
 for i = 1:size(appleTreePos, 1)
-    ObjectClass.PlaceObjects2(veg, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    ObjectClass.PlaceObjects2(potato, appleTreePos(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 % unsorted box 
@@ -122,7 +122,7 @@ appleSorted = [
 
 %% Testing
 
-fruit = 'potato.ply';
+tomato = 'potato.ply';
 
 orangeTreePosTest = [
     -0.6, 0.8, 0.8
@@ -135,7 +135,7 @@ unsortedPosTest = [
     ];
 
 for i = 1:size(orangeTreePosTest, 1)
-    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(fruit, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
+    [orangeObject, orangeVertices] = FruitnVeg.PlaceObjects2(tomato, orangeTreePosTest(i, :), 'Scale', [1.5, 1.5, 1.5], 'Rotate', [0, 0, 0]);
 end
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
