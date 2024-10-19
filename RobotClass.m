@@ -28,7 +28,7 @@ classdef RobotClass
             fprintf('Estiamted Joints for target EE: [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f] \n', qGoal)
         end
 
-        function qGoal = MoveObject(robot,pose,steps,object,vertices, pickUp, method)
+        function qGoal = MoveObject(robot,pose,steps,object,vertices,pickUp, method)
             % Move Robot to given location
             %   Given an object and its goal location,
             %   move the robot using inverse kinematics
@@ -41,7 +41,7 @@ classdef RobotClass
             % gripper = Gripper();
     
             q0 = robot.model.getpos(); % get current joint poses
-            T_EE = transl(pose) * trotx(pi); % rotate 180 deg so that the Z axis points down
+            T_EE = transl(pose); % rotate 180 deg so that the Z axis points down
             qGoal = robot.model.ikcon(T_EE,q0); %obtain needed joints for goal
 
             if method == 1
@@ -77,6 +77,43 @@ classdef RobotClass
                 end
                 drawnow();
             end
+            qGoal = qMatrix(end, :);
+        end
+
+        function qGoal = MoveObject2(robot, pose, steps, object, vertices, pickUp)
+            % MoveObject2 Moves a robot to a specified pose using a chosen method
+            % 
+            % Inputs:
+            %   - robot: The robot model.
+            %   - pose: Desired end-effector pose
+            %   - steps: Number of steps for the trajectory.
+            %   - object: The graphical object to update.
+            %   - vertices: Vertices of the object.
+            %   - pickUp: Boolean indicating if the robot is holding the object.
+            %
+            % Outputs:
+            %   - qGoal: Final joint configuration.
+            
+        
+            q0 = robot.model.getpos(); % Get current joint poses
+            T_EE = pose; % Using the provided end-effector pose
+            qGoal = robot.model.ikcon(T_EE, q0); % Compute joint configuration for the goal
+        
+            qMatrix = jtraj(q0,qGoal,steps);
+
+            % Execute the motion
+            for i = 1:steps
+                robot.model.animate(qMatrix(i, :));
+        
+                if pickUp
+                    % Update the object's vertices to reflect its transformation
+                    updated_transform = robot.model.fkineUTS(qMatrix(i, :));
+                    updated_vertices = [vertices, ones(size(vertices, 1), 1)] * updated_transform';
+                    set(object, 'Vertices', updated_vertices(:, 1:3));
+                end
+                drawnow();
+            end
+        
             qGoal = qMatrix(end, :);
         end
 
