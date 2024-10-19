@@ -96,7 +96,7 @@ classdef RobotClass
             
         
             q0 = robot.model.getpos(); % Get current joint poses
-            T_EE = transl(pose); % Using the provided end-effector pose
+            T_EE = transl(pose)* trotx(pi); % Using the provided end-effector pose
             qGoal = robot.model.ikcon(T_EE, q0); % Compute joint configuration for the goal
         
             qMatrix = jtraj(q0,qGoal,steps);
