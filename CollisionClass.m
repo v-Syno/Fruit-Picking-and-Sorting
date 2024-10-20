@@ -1,212 +1,124 @@
-%% Collision functions
-
 classdef CollisionClass
     properties (Access = protected)
-        ellipX; 
-        ellipY;
-        ellipZ;
-        jointX;
-        jointY;
-        linkLeng;
-        JointEllipse;
-        centreJoints;
+        ellipX; % X-coordinates for ellipsoid surface
+        ellipY; % Y-coordinates for ellipsoid surface
+        ellipZ; % Z-coordinates for ellipsoid surface
+        jointX; % Radius along X-axis for ellipsoid
+        jointY; % Radius along Y-axis for ellipsoid
+        linkLength; % Length of each robot link
+        ellipsoidSurfaces; % Handles for plotted ellipsoids
+        linkCenters; % Centers of the ellipsoids
     end
-
+    
     methods
-        function visualiseEllipse(self, robot, duration)
-            % Function to visualize ellipses around the robot's links for collision checking
-            hold on;
-            tempAng = robot.model.getpos();
-            [Tr, jointTr] = robot.model.fkine(tempAng);
-            jointLinks = robot.model.links;
-
-            % Calculate the centers of each joint/link and create ellipses
-            for i = 2:length(jointTr)
-                centre = 0.5 * (jointTr(i - 1).t + jointTr(i).t);
-                self.centreJoints{i - 1} = centre;
-            end
-
-            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
-                self.jointX = 0.058;
-                self.jointY = 0.058;
-                self.linkLeng = [.15 0.001 .110 0.071 .095 0.131 .095 0.091 0.051 .041 0.001];
-            elseif strcmp(robot.plyFileNameStem, 'LinearUR3')
-                self.jointX = 0.058;
-                self.jointY = 0.058;
-                self.linkLeng = [.12 .158 .075 .031 .032 .0853 .031];
-            end
-
-            % Draw ellipses around each link
-            for j = 1:length(self.centreJoints)
-                [self.ellipX, self.ellipY, self.ellipZ] = ellipsoid(self.centreJoints{j}(1), self.centreJoints{j}(2), self.centreJoints{j}(3), self.jointX, self.jointY, self.linkLeng(j));
-                self.JointEllipse(j) = surf(self.ellipX, self.ellipY, self.ellipZ);
-                Jrot = rad2deg(jointTr(j).tr2rpy);
-
-                % Rotate ellipses according to the joint angles
-                rotate(self.JointEllipse(j), [0 0 1], Jrot(3), self.centreJoints{j});
-                rotate(self.JointEllipse(j), [0 1 0], Jrot(2), self.centreJoints{j});
-                rotate(self.JointEllipse(j), [1 0 0], Jrot(1), self.centreJoints{j});
-            end
-
-            pause(duration);
-            delete(self.JointEllipse);
+        % Constructor to initialize the class
+        function self = CollisionClass(robot)
+            self.initializeEllipsoids(robot);
         end
-
-        function outp = collisionCheckSelf(self, robot, Q)
-            % Check if the end effector position (Q) is in collision with any of the robot's links
-            tempAng = robot.model.getpos();
-            [Tr, jointTr] = robot.model.fkine(tempAng);
-
-            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
-                self.jointX = 0.088;
-                self.jointY = 0.088;
-                self.linkLeng = [.25 0.001 .160 0.071 .075 0.091 .095 0.091 0.051 .081 0.001];
-            elseif strcmp(robot.plyFileNameStem, 'LinearUR3')
-                self.jointX = 0.062;
-                self.jointY = 0.062;
-                self.linkLeng = [.12 .158 .075 .111 .042 .0853 .031];
+        
+        % Initialize ellipsoids based on the robot configuration
+        function initializeEllipsoids(self, robot)
+            % Set default radii for ellipsoids (can be modified as needed)
+            self.jointX = 0.1; % Example value for X-radius
+            self.jointY = 0.1; % Example value for Y-radius
+            self.linkLength = 0.3; % Example value for link length
+            
+            % Initialize ellipsoids based on the robot's current position
+            self.updateEllipsoids(robot);
+        end
+        
+        % Update ellipsoid positions and orientations based on the robot's current configuration
+        function updateEllipsoids(self, robot)
+            % Get current joint positions for the robot
+            jointAngles = robot.model.getpos(); 
+            
+            % Calculate forward kinematics using the joint angles with fkineUTS
+            % Assuming 'fkineUTS' returns an array of 4x4 transformation matrices
+            jointTransforms = robot.model.fkineUTS(jointAngles);
+            
+            % Calculate the centers of each link (midpoint between consecutive joints)
+            numLinks = size(jointTransforms, 3) - 1;
+            self.linkCenters = cell(numLinks, 1);
+            for i = 1:numLinks
+                % Midpoint between the i-th and (i+1)-th joint
+                % Extract translation components from the transformation matrices
+                t1 = jointTransforms(1:3, 4, i);
+                t2 = jointTransforms(1:3, 4, i+1);
+                self.linkCenters{i} = 0.5 * (t1 + t2);
             end
-
-            % Calculate grip positions
-            point = robot.model.fkineUTS(Q) * transl(0, 0, 0.15);
-            point1 = point * transl(0, 0.0127, 0.2312);
-            point2 = point * transl(0, -0.0127, 0.2312);
-            pont = robot.model.fkineUTS(Q) * transl(0, 0, 0.05);
-            pont = pont(1:3, 4);
-            point1 = point1(1:3, 4);
-            point2 = point2(1:3, 4);
-
-            grips = [linspace(pont(1), point1(1), 4)', linspace(pont(2), point1(2), 4)', linspace(pont(3), point1(3), 4)';
-                     linspace(pont(1), point2(1), 4)', linspace(pont(2), point2(2), 4)', linspace(pont(3), point2(3), 4)'];
-
-            % Check for collision between the end effector and each link
-            for i = 1:length(self.centreJoints) - 1
-                for j = 1:length(grips)
-                    point = [grips(j, 1), grips(j, 2), grips(j, 3)]';
-                    result = (point - self.centreJoints{i})' * ([self.jointX^-2, self.jointY^-2, self.linkLeng(i)^-2] .* eye(3)) * (point - self.centreJoints{i});
-
-                    if result <= 1
-                        outp = true; % Return true if collision detected
-                        return;
+            
+            % Visualize the updated ellipsoids
+            self.visualizeEllipsoids(robot, 0.5); % Update visualization
+        end
+        
+        % Visualize the ellipsoids around each link
+        function visualizeEllipsoids(self, robot, duration)
+            % Delete old ellipsoid surfaces if they exist
+            if ~isempty(self.ellipsoidSurfaces)
+                for i = 1:length(self.ellipsoidSurfaces)
+                    if isvalid(self.ellipsoidSurfaces{i})
+                        delete(self.ellipsoidSurfaces{i});
                     end
                 end
             end
-
-            outp = false; % No collision
-        end
-
-        function outp = collisionCheckGrip(self, robot, P)
-            % Check if the gripper collides with a specific point P
-            endAn = robot.model.getpos();
-
-            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
-                gripXY = 4 * 0.0127;
-                gripZ = 0.05;
-            elseif strcmp(robot.plyFileNameStem, 'LinearUR3')
-                gripXY = 4 * 0.0127;
-                gripZ = 0.0612;
-            end
-
-            endTr = SE3(robot.model.fkine(endAn).T * transl(0, 0, gripZ + 0.18)); % End effector transform
-
-            % Check if the point P is inside the gripper's bounding ellipsoid
-            place = (P - endTr.t');
-            result = place * ([gripXY^-2, gripXY^-2, (5 * gripZ)^-2] .* eye(3)) * place';
-
-            outp = result <= 1; % Return true if collision detected
-        end
-
-        function outp = collisionCheckCow(self, robot, cow)
-            % Check if the gripper collides with a cow model
-            endAn = robot.model.getpos();
-            cowPos = cow.model.base.T;
-            cowPos(3, 4) = cowPos(3, 4) + 0.3;
-            P = cowPos(1:3, 4);
-
-            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
-                gripXY = 5 * 0.0127;
-                gripZ = 0.05;
-            elseif strcmp(robot.plyFileNameStem, 'LinearUR3')
-                gripXY = 9 * 0.0127;
-                gripZ = 0.0612;
-            end
-
-            endTr = SE3(robot.model.fkine(endAn).T * transl(0, 0, gripZ + 0.15)); % End effector transform
-            place = (endTr.t' - P);
-            result = place * ([0.34^-2, 0.2^-2, 0.22^-2] .* eye(3)) * place';
-
-            outp = result <= 1; % Return true if collision detected
-        end
-    
-        function check = collisionGroundLPI(self, robot)
-            planeNormal = [0,0,1];
-            pointOnPlane = [0,0,0];
-            if (strcmp(robot.plyFileNameStem, 'ColouredPanda'))
-                QAgrip1 = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,-0.127,0.215);
-                QAgrip2 = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,0.127,0.215);
-                point1 = [QAgrip1(1,4), QAgrip1(2,4), QAgrip1(3,4)];
-                point2 = [QAgrip2(1,4), QAgrip2(2,4), QAgrip2(3,4)];
-            end
-            if (strcmp(robot.plyFileNameStem, 'LinearUR3'))
-                harvestGrip1 = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,0.127,0.2312);
-                harvestGrip2 = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,-0.127,0.2312);
-                point1 = [harvestGrip1(1,4), harvestGrip1(2,4), harvestGrip1(3,4)];
-                point2 = [harvestGrip2(1,4), harvestGrip2(2,4), harvestGrip2(3,4)];
-            end
-            u = point2 - point1;
-            w = point1 - pointOnPlane;
-            D = dot(planeNormal,u);
-            N = -dot(planeNormal,w);
-
-            check = 0; %#ok<NASGU>
-            if abs(D) < 10^-7        % The segment is parallel to plane
-                if N == 0           % The segment lies in plane
-                    check = 2;
-                    return
-                else
-                    check = 0;       %no intersection
-                    return
-                end
-            end
-
-            %compute the intersection parameter
-            sI = N / D;
-%             intersectionPoint = point1OnLine + sI.*u; % not needed
-
-            if (sI < 0 || sI > 1)
-                check= 3;          %The intersection point  lies outside the segment, so there is no intersection
-            else
-                check=1;
-            end
-        end
-    
-        function qMat = remakeTraj(self, robot, sideSteps, steps, q2)
-            % using basic RRT
-            poseA = robot.model.getpos();
             
-            qRand = poseA + .11*(2 * rand(1,length(robot.model.links)) - 1) * pi/8;
-           
-            if strcmp(robot.plyFileNameStem, 'LinearUR3')
-                qRand(1) = poseA(1);
-            end 
-            planner = self.collisionCheckSelf(robot, qRand);
-            trials = 0;
-            while planner == true
-                qRand = poseA + .11*(2 * rand(1,length(robot.model.links)) - 1) * pi/8;
-                if strcmp(robot.plyFileNameStem, 'LinearUR3')
-                    qRand(1) = poseA(1);
-                end
-                planner = self.collisionCheckSelf(robot, qRand);
-                trials = trials +1
+            % Get the current joint transformations using fkineUTS
+            jointAngles = robot.model.getpos(); 
+            jointTransforms = robot.model.fkineUTS(jointAngles);
+            numLinks = size(jointTransforms, 3) - 1;
+            self.ellipsoidSurfaces = cell(numLinks, 1);
+            
+            % Generate and plot ellipsoids for each link
+            for j = 1:numLinks
+                % Get the link center
+                center = self.linkCenters{j};
+                % Generate ellipsoid data points
+                [self.ellipX, self.ellipY, self.ellipZ] = ellipsoid(center(1), center(2), center(3), ...
+                    self.jointX, self.jointY, self.linkLength / 2);
+                
+                % Plot the ellipsoid
+                self.ellipsoidSurfaces{j} = surf(self.ellipX, self.ellipY, self.ellipZ);
+                alpha(self.ellipsoidSurfaces{j}, 0.3); % Set transparency
+                
+                % Rotate ellipsoid to match the link orientation
+                % Extract rotation angles from the transformation matrix
+                rotationAngles = rad2deg(tr2rpy(jointTransforms(:,:,j)));
+                rotate(self.ellipsoidSurfaces{j}, [0 0 1], rotationAngles(3), center);
+                rotate(self.ellipsoidSurfaces{j}, [0 1 0], rotationAngles(2), center);
+                rotate(self.ellipsoidSurfaces{j}, [1 0 0], rotationAngles(1), center);
             end
-            avoidPoseA = qRand;
-            s1 = lspb(0,1,sideSteps);
-            firstqMatrix = (1-s1)*poseA + s1*avoidPoseA;
-            s2 = lspb(0,1, steps - sideSteps);
-            secondqMatrix = (1-s2)*firstqMatrix(sideSteps, :) + s2*q2;
-            qMat = [firstqMatrix; secondqMatrix];
-
+            
+            % Pause for visualization
+            pause(duration);
+        end
+        
+        % Check if points lie inside any of the ellipsoids
+        function collisionDetected = checkCollision(self, points)
+            collisionDetected = false;
+            for j = 1:length(self.linkCenters)
+                % Calculate algebraic distance for each point
+                algebraicDist = GetAlgebraicDist(points, self.linkCenters{j}, ...
+                    [self.jointX, self.jointY, self.linkLength / 2]);
+                
+                % Check if any points are inside the ellipsoid
+                if any(algebraicDist < 1)
+                    collisionDetected = true;
+                    disp(['Collision detected with link ', num2str(j)]);
+                    break;
+                end
+            end
         end
     end
 end
 
+% Helper function to calculate algebraic distance
+function dist = GetAlgebraicDist(points, center, radii)
+    % points: Nx3 matrix of [x, y, z] coordinates to check
+    % center: 1x3 vector of ellipsoid center [x_c, y_c, z_c]
+    % radii: 1x3 vector of ellipsoid radii [r_x, r_y, r_z]
+
+    % Calculate the algebraic distance for each point
+    dist = ((points(:,1) - center(1)).^2 / radii(1)^2) + ...
+           ((points(:,2) - center(2)).^2 / radii(2)^2) + ...
+           ((points(:,3) - center(3)).^2 / radii(3)^2);
+end

@@ -90,7 +90,6 @@ potatoGroundPos = [
 
 
 % unsorted box 
-        % update positions
 unsortedPos = [
     -0.15, 0.12, 0.01;
     0, 0.12, 0.01;
@@ -196,96 +195,73 @@ for i = 1:size(potatoGroundPos, 1)
 
 end
 
-% %% testing ellipsoid detection
-% % Setup environment
-% clf;
-% clc;
-% view(3)
-% hold on
-% 
-% axis([-1.8, 1.8, -1.8, 1.8, 0.01, 2]);
-% 
-% floor = imread('grass.jpg'); % Floor Image
-% soil = imread('soil.jpg'); % Soil Image
-% wall = imread('sky.PNG'); % Wall Image
-% 
-% surf([-1.8, -1.8; 1.8, 1.8], [-1.8, 1.8; -1.8, 1.8], [0.01, 0.01; 0.01, 0.01], 'CData', floor, 'FaceColor', 'texturemap'); % Floor
-% surf([-1.8, -1.8; 1.8, 1.8], [1, 1.8; 1, 1.8], [0.01, 0.01; 0.01, 0.02], 'CData', soil, 'FaceColor', 'texturemap'); % Soil - veggie patch
-% surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0], 'CData', wall, 'FaceColor', 'texturemap'); % Back wall (y = 1.8)
-% 
-% % Initialize UR3e Robot (harvesterBot)
-% steps = 50;
-% 
-% % Initialize harvesterBot as an instance of LinearUR3e
-% harvesterBot = LinearUR3e(transl(0.3, 0.74, 0.01));
-% 
-% % Fix prismatic joint limits for harvesterBot to ensure they are non-negative
-% for i = 1:length(harvesterBot.model.links)
-%     if harvesterBot.model.links(i).isprismatic
-%         % Ensure both lower and upper limits are non-negative
-%         harvesterBot.model.links(i).qlim = max(0, harvesterBot.model.links(i).qlim);
-%     end
-% end
-% 
-% % Plot the harvesterBot to initialize the graphical model
-% q0 = zeros(1, harvesterBot.model.n); % Initial joint configuration
-% harvesterBot.model.plot(q0); % Plot with the initial configuration
-% 
-% % Pause briefly to ensure the plot is registered
-% pause(0.5);
-% 
-% % Testing Ellipsoid Detection
-% 
-% % Initialize the CollisionClass for the robot
-% collisionDetector = CollisionClass(harvesterBot);
-% 
-% % Harvesting Tomatoes
-% for i = 1:size(tomatoTreePos, 1)
-%     % Step 1: Move to the position of the tomato on the tree, with room for the gripper.
-%     tomatoPose = tomatoTreePos(i, :) + [0, 0, 0.1]; % Offset to avoid collision initially
-% 
-%     % Update ellipsoids based on the current robot configuration
-%     collisionDetector.updateEllipsoids(harvesterBot);
-% 
-%     % Check for collision using the ellipsoid-based collision detection
-%     if collisionDetector.checkCollision([tomatoPose(1), tomatoPose(2), tomatoPose(3)])
-%         warning('Potential collision detected while moving to the tomato.');
-%     end
-% 
-%     % Move the robot to the position
-%     RobotClass.MoveRobot(harvesterBot, tomatoPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward', right, left);
-% 
-%     % Step 2: Move to the tomato position and pick it up.
-%     collisionDetector.updateEllipsoids(harvesterBot);
-%     if collisionDetector.checkCollision([tomatoTreePos(i, 1), tomatoTreePos(i, 2), tomatoTreePos(i, 3)])
-%         warning('Potential collision detected while picking up the tomato.');
-%     end
-% 
-%     RobotClass.MoveRobot(harvesterBot, tomatoTreePos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, true, 'down', right, left);
-% 
-%     % Step 3: Move to the unsorted crate position.
-%     unsortedCratePose = unsortedPos(i, :) + [0, 0, 0.1];
-%     collisionDetector.updateEllipsoids(harvesterBot);
-%     if collisionDetector.checkCollision([unsortedCratePose(1), unsortedCratePose(2), unsortedCratePose(3)])
-%         warning('Potential collision detected while moving to the unsorted crate.');
-%     end
-% 
-%     RobotClass.MoveRobot(harvesterBot, unsortedCratePose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'forward', right, left);
-% 
-%     % Step 4: Lower the tomato into the crate.
-%     unsortedCratePose = unsortedPos(i, :) + [0, 0, 0.05];
-%     collisionDetector.updateEllipsoids(harvesterBot);
-%     if collisionDetector.checkCollision([unsortedCratePose(1), unsortedCratePose(2), unsortedCratePose(3)])
-%         warning('Potential collision detected while lowering the tomato.');
-%     end
-% 
-%     RobotClass.MoveRobot(harvesterBot, unsortedCratePose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down', right, left);
-% 
-%     % Step 5: Release the gripper.
-%     collisionDetector.updateEllipsoids(harvesterBot);
-%     if collisionDetector.checkCollision([unsortedPos(i, 1), unsortedPos(i, 2), unsortedPos(i, 3)])
-%         warning('Potential collision detected while releasing the gripper.');
-%     end
-% 
-%     RobotClass.MoveRobot(harvesterBot, unsortedPos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, false, 'down', right, left);
-% end
+%% testing ellipsoid detection
+%% Main File: Integrating Collision Detection for Harvesting Tomatoes
+
+% Initialization (add this at the beginning of the main file)
+collisionDetector = CollisionClass(harvesterBot); % Initialize CollisionClass for the robot
+
+% Harvesting Tomatos
+for i = 1:size(tomatoTreePos, 1)
+    % Step 1: Move to the position of the tomato on the tree, with room for the gripper.
+    tomatoPose = tomatoTreePos(i, :) + [0, 0, 0.1]; % Offset to avoid collision initially
+    
+    % Update ellipsoids based on the current robot configuration
+    collisionDetector.updateEllipsoids(harvesterBot);
+    
+    % Check for collision using the ellipsoid-based collision detection
+    if collisionDetector.checkCollision([tomatoPose(1), tomatoPose(2), tomatoPose(3)])
+        warning('Potential collision detected while moving to the tomato.');
+    end
+    
+    % Move the robot to the position
+    RobotClass.MoveRobot(harvesterBot, tomatoPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward', right, left);
+
+    % Step 2: Move to the tomato position and pick it up.
+    % Update ellipsoids again to reflect the new robot state
+    collisionDetector.updateEllipsoids(harvesterBot);
+    
+    % Check for collision while moving to the tomato position
+    if collisionDetector.checkCollision([tomatoTreePos(i, 1), tomatoTreePos(i, 2), tomatoTreePos(i, 3)])
+        warning('Potential collision detected while picking up the tomato.');
+    end
+    
+    RobotClass.MoveRobot(harvesterBot, tomatoTreePos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, true, 'down', right, left);
+
+    % Step 3: Move the tomato to the unsorted crate position.
+    unsortedCratePose = unsortedPos(i, :) + [0, 0, 0.1];
+    
+    % Update ellipsoids
+    collisionDetector.updateEllipsoids(harvesterBot);
+    
+    % Check for collision when moving to the unsorted crate
+    if collisionDetector.checkCollision([unsortedCratePose(1), unsortedCratePose(2), unsortedCratePose(3)])
+        warning('Potential collision detected while moving to the unsorted crate.');
+    end
+    
+    RobotClass.MoveRobot(harvesterBot, unsortedCratePose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'forward', right, left);
+
+    % Step 4: Lower the tomato into the crate.
+    unsortedCratePose = unsortedPos(i, :) + [0, 0, 0.05]; % Adjust based on tomato size
+    
+    % Update ellipsoids
+    collisionDetector.updateEllipsoids(harvesterBot);
+    
+    % Check for collision while lowering the tomato
+    if collisionDetector.checkCollision([unsortedCratePose(1), unsortedCratePose(2), unsortedCratePose(3)])
+        warning('Potential collision detected while lowering the tomato.');
+    end
+    
+    RobotClass.MoveRobot(harvesterBot, unsortedCratePose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down', right, left);
+
+    % Step 5: Release the gripper.
+    % Update ellipsoids
+    collisionDetector.updateEllipsoids(harvesterBot);
+    
+    % Check for collision when releasing the gripper
+    if collisionDetector.checkCollision([unsortedPos(i, 1), unsortedPos(i, 2), unsortedPos(i, 3)])
+        warning('Potential collision detected while releasing the gripper.');
+    end
+    
+    RobotClass.MoveRobot(harvesterBot, unsortedPos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, false, 'down', right, left);
+end
