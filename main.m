@@ -126,7 +126,7 @@ catPos = [0,0,0.01];
 steps = 50;
 
 % Initialize robots and their respective collision functions
-sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
+%sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
 harvesterBot = LinearUR3e(transl(0.3,0.74,0.01) );
 
 %%
@@ -146,7 +146,7 @@ for i = 1:size(tomatoTreePos, 1)
     RobotClass.MoveRobot(harvesterBot, tomatoPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward', right, left);
 
     % Step 2: Move to the tomato position and pick it up.
-    RobotClass.MoveRobot(harvesterBot, tomatoTreePos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, true, 'down', right, left);
+    RobotClass.MoveRobot(harvesterBot, tomatoTreePos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, true, 'forward', right, left);
 
     % Step 3: Move the tomato to the unsorted crate position.
     unsortedCratePose = unsortedPos(i, :) + [0, 0, 0.1];
