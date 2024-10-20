@@ -13,10 +13,6 @@ classdef CollisionClass
     end
 
     methods
-        function self = CollisionClass() 
-            % Constructor to initialize any properties if needed in the future
-        end
-
         function visualiseEllipse(self, robot, duration)
             % Function to visualize ellipses around the robot's links for collision checking
             hold on;
