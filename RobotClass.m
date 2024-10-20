@@ -173,97 +173,84 @@ classdef RobotClass
 
         end
 
-        function qEnd = MoveRobot(robot, position, steps, payload, holdingObject, vertices, varargin)
-            % MoveRobot moves the robot to a specified position with specified options.
-            % Arguments:
-            %   robot - The robot model.
-            %   position - The target position for the end effector [x, y, z].
-            %   steps - Number of steps for the movement.
-            %   payload - The object to be moved.
-            %   holdingObject - Boolean indicating if the robot is holding an object.
-            %   vertices - Vertices of the payload for visualization.
-            %   'endEffDirection' - Optional argument specifying the end-effector direction.
-            %                       Accepts 'up', 'down', 'left', 'right', 'forward', 'backward'.
-            %                       Default is 'down'.
+        function qEnd = MoveRobot(robot, pose, steps, object, vertices, pickUp, endEffDirection, g1, g2)
+            % MoveRobot Moves a robot to a specified position and operates the gripper.
+            %
+            % Inputs:
+            %   - robot: The robot model.
+            %   - pose: Desired end-effector pose.
+            %   - steps: Number of steps for the trajectory.
+            %   - object: The graphical object to update.
+            %   - vertices: Vertices of the object.
+            %   - pickUp: Boolean, true if the robot is to pick up the object.
+            %   - endEffDirection: 'left', 'right', 'forward', or 'down'.
+            %   - g1, g2: Gripper models.
+            %
+            % Outputs:
+            %   - qEnd: Final joint configuration.
         
-            % Default values for options
-            endEffDirection = 'down';  % Default end-effector direction
-        
-            % Parse optional arguments
-            if nargin > 6
-                for i = 1:2:length(varargin)
-                    switch lower(varargin{i})
-                        case 'endeffdirection'
-                            endEffDirection = validatestring(varargin{i + 1}, ...
-                                {'up', 'down', 'left', 'right', 'forward', 'backward'});
-                        otherwise
-                            error('Unknown parameter: %s', varargin{i});
-                    end
-                end
-            end
-        
-            % Determine the transformation based on end-effector direction
-            switch endEffDirection
-                case 'up'
-                    endMove = transl(position) * trotx(-pi/2);
-                case 'down'
-                    endMove = transl(position) * trotx(pi);
+            % Determine the end-effector pose based on direction.
+            switch lower(endEffDirection)
                 case 'left'
-                    endMove = transl(position) * troty(pi/2);
+                    endMove = transl(pose) * troty(pi/2);
                 case 'right'
-                    endMove = transl(position) * troty(-pi/2);
+                    endMove = transl(pose) * troty(-pi/2);
                 case 'forward'
-                    endMove = transl(position) * trotx(0); % Point along x-axis
-                case 'backward'
-                    endMove = transl(position) * trotx(pi);
+                    endMove = transl(pose);
+                case 'down'
+                    endMove = transl(pose) * trotx(pi);
+                otherwise
+                    error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
             end
         
-            % Initial robot position and configuration
+            % Calculate the initial and target joint configurations.
             q0 = robot.model.getpos();
             q1 = robot.model.ikcon(robot.model.fkine(q0), q0);
             q2 = robot.model.ikcon(endMove, q0);
         
-            % Trajectory generation using trapezoidal velocity profile
-            s = lspb(0, 1, steps);  % Scalar function for smooth trajectory
-            qMatrix = nan(steps, length(robot.model.links));  % Preallocate memory for the trajectory
+            % Generate trajectory using trapezoidal velocity profile.
+            s = lspb(0, 1, steps);
+            qMatrix = nan(steps,length(robot.model.links));  % Create memory allocation for variables
             for i = 1:steps
-                qMatrix(i, :) = (1 - s(i)) * q1 + s(i) * q2;
+                qMatrix(i,:) = (1-s(i))*q1 + s(i)*q2;
             end
         
-            % Initialize collision detection
-            collF = CollisionClass();
+            % Set up gripper trajectory for pick up if needed.
+            if pickUp
+                qPath1 = jtraj([0, 0, 0], [deg2rad(30), -deg2rad(30), 0], steps);  % Close for pick-up.
+                qPath2 = jtraj([0, 0, 0], [-deg2rad(30), deg2rad(30), 0], steps);
+            end
         
-            % Motion execution loop
+            % Execute the motion and animate the robot and grippers.
             for i = 1:steps
-                % Check for collisions with self, ground, or other objects (e.g., cow)
-                selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
-                groundCheck = collF.collisionGroundLPI(robot);
-                
-                % If any collision is detected, recompute the trajectory to avoid
-                if selfCheck || groundCheck == 1
-                    disp('Collision detected! Adjusting path...');
-                    newQMatrix = collF.remakeTraj(robot, 10, steps, q2);  % Re-plan trajectory to avoid collision
-                    qMatrix = newQMatrix;
-                    i = 1;  % Restart loop with new trajectory
-                    continue;
-                end
-        
-                % Animate the robot along the trajectory
                 robot.model.animate(qMatrix(i, :));
         
-                % Update object vertices if holding an object
-                if holdingObject
-                    transMatrix = robot.model.fkine(qMatrix(i, :)).T * transl(0, 0, 0.2);
-                    transformedVertices = [vertices, ones(size(vertices, 1), 1)] * transMatrix';
-                    set(payload, 'Vertices', transformedVertices(:, 1:3));
+                % Update gripper positions.
+                pos1 = robot.model.fkineUTS(qMatrix(i, :)) * transl(0, -0.0127, 0.05) * troty(-pi/2);
+                pos2 = robot.model.fkineUTS(qMatrix(i, :)) * transl(0, 0.0127, 0.05) * troty(-pi/2);
+                g1.model.base = pos1;
+                g2.model.base = pos2;
+                g1.model.animate(g1.model.getpos());
+                g2.model.animate(g2.model.getpos());
+        
+                % Animate gripper if picking up.
+                if pickUp
+                    g1.model.animate(qPath1(i, :));
+                    g2.model.animate(qPath2(i, :));
+        
+                    % Update payload vertices to reflect its transformation.
+                    updated_transform = robot.model.fkine(qMatrix(i, :)).T * transl(0, 0, 0.2);
+                    updated_vertices = [vertices, ones(size(vertices, 1), 1)] * updated_transform';
+                    set(object, 'Vertices', updated_vertices(:, 1:3));
                 end
         
-                drawnow();  % Update the animation
+                drawnow();
             end
         
-            % Return the final joint configuration
+            % Return the final joint configuration.
             qEnd = qMatrix(end, :);
         end
+
 
         function GripperMove(g1, g2, varargin)
             % GripperMove controls the opening and closing of a gripper using two gripper models (g1 and g2).
