@@ -115,14 +115,6 @@ potatoSorted = [
     0.5, -1.25, 0.03;
    ];
 
-%% testing
-% tomatoTreePos = [
-%    -0.25, -0.35, 0.015;
-%    -0.25, -0.5, 0.015;
-%    -0.25, -0.65, 0.015;    
-%     ];
-% 
-% [tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
 
 %% Setup obstacles
 cat = 'cat.ply';
@@ -168,29 +160,34 @@ for i = 1:size(tomatoTreePos, 1)
     RobotClass.MoveRobot(harvesterBot, unsortedPos(i, :), steps, tomatoObject{i}, tomatoVertices{i}, false, 'down', right, left);
 end
 
-%% Harvesting Tomatos
 
-for i = 1:size(potatoGroundPos, 1)
-    % Step 1: Move to the position of tomato on the tree. Give room for
-    % gripper
-    potatoPose = potatoGroundPos(i, :);
-    RobotClass.MoveObject2(harvesterBot, potatoPose, steps, potatoObject{i}, potatoVertices{i}, false);
 
-    % Step 2: Close the gripper to grip the tomato
-    potatoPose = potatoGroundPos(i, :);
-    RobotClass.MoveObject2(harvesterBot, potatoPose, steps, potatoObject{i}, potatoVertices{i}, true);
 
-    % Step 2: move tomato to the unsorted crate pose
-    unsortedCratePose = unsortedPos(i+3, :) + [0,0,0.1];
-    RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, true);
 
-    % Step 4: move EE pose to point down (z axis down) and lower tomato in
-    % crate
-    unsortedCratePose = unsortedPos(i+3, :) + [0,0,potatoSize(:,3)];
-    RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, true);
 
-    % Step 5: release gripper
-    unsortedCratePose = unsortedPos(i+3, :);
-    RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, false);    
+%% Harvesting potatoes
 
-end
+% for i = 1:size(potatoGroundPos, 1)
+%     % Step 1: Move to the position of tomato on the tree. Give room for
+%     % gripper
+%     potatoPose = potatoGroundPos(i, :);
+%     RobotClass.MoveObject2(harvesterBot, potatoPose, steps, potatoObject{i}, potatoVertices{i}, false);
+% 
+%     % Step 2: Close the gripper to grip the tomato
+%     potatoPose = potatoGroundPos(i, :);
+%     RobotClass.MoveObject2(harvesterBot, potatoPose, steps, potatoObject{i}, potatoVertices{i}, true);
+% 
+%     % Step 2: move tomato to the unsorted crate pose
+%     unsortedCratePose = unsortedPos(i+3, :) + [0,0,0.1];
+%     RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, true);
+% 
+%     % Step 4: move EE pose to point down (z axis down) and lower tomato in
+%     % crate
+%     unsortedCratePose = unsortedPos(i+3, :) + [0,0,potatoSize(:,3)];
+%     RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, true);
+% 
+%     % Step 5: release gripper
+%     unsortedCratePose = unsortedPos(i+3, :);
+%     RobotClass.MoveObject2(harvesterBot, unsortedCratePose, steps, potatoObject{i}, potatoVertices{i}, false);    
+% 
+% end
