@@ -25,21 +25,21 @@ soil = imread ('soil.jpg'); % Soil Image
 wall = imread ('sky.PNG'); % wall Image
 
 surf([-1.8,-1.8;1.8,1.8],[-1.8,1.8;-1.8,1.8],[0.01,0.01;0.01,0.01] ,'CData',floor ,'FaceColor','texturemap'); %Floor
-surf([-1.8,-1.8;1.8,1.8],[0.8,1.5;0.8,1.5],[0.01,0.01;0.01,0.02] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
+surf([-1.8,-1.8;1.8,1.8],[1,1.8;1,1.8],[0.01,0.01;0.01,0.02] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
 surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wall ,'FaceColor','texturemap'); % Back wall (y = 1.8)
 
 % Trees
 tree = 'treeSkinnier.ply';
-ObjectClass.PlaceObjects2(tree, [-0.5,1.1,0.01], 'Scale', [0.2,0.2,0.15]); % left tree (big)
-ObjectClass.PlaceObjects2(tree, [0.5,1,0.01], 'Scale', [0.1, 0.1,0.1]); % right tree (small)
+ObjectClass.PlaceObjects2(tree, [-0.5,1.4,0.01], 'Scale', [0.2,0.2,0.15]); % left tree (big)
+ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.1, 0.1,0.1]); % right tree (small)
 
 % Boxes
 crate = 'crate.ply';
 fruitCrate = crate;
 vegCrate = crate;
-ObjectClass.PlaceObjects2(crate, [-0.3,0.05,0.06], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
-ObjectClass.PlaceObjects2(fruitCrate, [-0.5,-0.5,0.06], 'Scale', [0.5,1,0.5]); % tomato
-ObjectClass.PlaceObjects2(vegCrate, [0.5,-0.5,0.06], 'Scale', [0.5,1,0.5]); % potato
+ObjectClass.PlaceObjects2(crate, [0,0.3,0.06], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
+ObjectClass.PlaceObjects2(fruitCrate, [-0.25,-0.5,0.06], 'Scale', [0.5,1,0.5]); % tomato
+ObjectClass.PlaceObjects2(vegCrate, [0.5,-1.1,0.06], 'Scale', [0.5,1,0.5]); % potato
 
 %% Safety Features
 
@@ -71,9 +71,9 @@ potatoMidPt = 0.025;
 
 % tomatoes on trees
 tomatoTreePos = [
-    -0.5, 0.9, 0.15;
-    -0.35,1.1 0.2;
-    0.5,0.95, 0.09;    
+    -0.5, 1.25, 0.15;
+    -0.35,1.3 0.2;
+    0.5,1.1, 0.09;    
     ];
 % use PlaceObjects NOT PlaceObjects2 as thats used for non moving
 % components
@@ -81,9 +81,9 @@ tomatoTreePos = [
 
 % potatoes
 potatoGroundPos = [
-    0, 1, 0.01;
-    -0.2, 0.9, 0.01;
-    0.2, 1.3, 0.01;    
+    0, 1.2, 0.01;
+    -0.2, 1.3, 0.01;
+    0.2, 1.25, 0.01;    
     ];
 
 [potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
@@ -100,18 +100,29 @@ unsortedPos = [
     ];
 
 % tomatoes sorting box 
+% add mid point to z value to account for size of fruit (no clipping)
 tomatoSorted = [
-   -0.5, -0.35, 0.015;
-   -0.5, -0.5, 0.015;
-   -0.5, -0.65, 0.015;
+   -0.25, -0.35, 0.015;
+   -0.25, -0.5, 0.015;
+   -0.25, -0.65, 0.015;
    ];
 
 % potatoes sorting box
+% add mid point to z value to account for size of fruit (no clipping)
 potatoSorted = [
-   0.5, -0.35, 0.015;
-   0.5, -0.5, 0.015;
-   0.5, -0.65, 0.015;
+    0.5, -0.95, 0.03;
+    0.5, -1.1, 0.03;
+    0.5, -1.25, 0.03;
    ];
+
+%% testing
+% tomatoTreePos = [
+%    -0.25, -0.35, 0.015;
+%    -0.25, -0.5, 0.015;
+%    -0.25, -0.65, 0.015;    
+%     ];
+% 
+% [tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
 
 %% Setup obstacles
 cat = 'cat.ply';
@@ -123,8 +134,8 @@ catPos = [0,0,0.01];
 steps = 50;
 
 % Initialize robots and their respective collision functions
-%sortingBot = Panda(transl(0,-0.5,0.01) * trotz(pi/2));
-harvesterBot = LinearUR3e(transl(0.3,0.5,0.01) );
+sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
+harvesterBot = LinearUR3e(transl(0.3,0.74,0.01) );
 
 %%
 % Initialise gripper on UR3 end effector.
