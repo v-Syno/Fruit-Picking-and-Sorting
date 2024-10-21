@@ -190,18 +190,24 @@ classdef RobotClass
             %   - qEnd: Final joint configuration.
         
             % Determine the end-effector pose based on direction.
+            % UPDATED POSITIONS
             switch lower(endEffDirection)
-                case 'left'
-                    endMove = transl(pose) * troty(pi/2);
-                case 'right'
-                    endMove = transl(pose) * troty(-pi/2);
-                case 'forward'
-                    endMove = transl(pose);
-                case 'down'
-                    endMove = transl(pose) * trotx(pi);
-                otherwise
-                    error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
+                        case 'left'
+                            % Rotate around the Z-axis to face left
+                            endMove = transl(pose) * trotz(pi/2);
+                        case 'right'
+                            % Rotate around the Z-axis to face right
+                            endMove = transl(pose) * trotz(-pi/2);
+                        case 'forward'
+                            % No rotation needed, facing forward
+                            endMove = transl(pose);
+                        case 'down'
+                            % Rotate around the X-axis to point downwards
+                            endMove = transl(pose) * trotx(-pi/2);
+                        otherwise
+                error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
             end
+
         
             % Calculate the initial and target joint configurations.
             q0 = robot.model.getpos();

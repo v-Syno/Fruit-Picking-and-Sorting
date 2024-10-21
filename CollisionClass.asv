@@ -13,7 +13,6 @@ classdef CollisionClass
     methods
         function self = CollisionClass() 
             % Constructor for CollisionClass
-            % Initialize properties
             self.JointEllipse = [];
             self.centreJoints = {};
         end
@@ -23,7 +22,7 @@ classdef CollisionClass
             % Clear any existing ellipsoids
             self.clearEllipsoids();
             
-            % Check if the plyFileNameStem property exists
+            % Check if the robot has the plyFileNameStem property
             if ~isprop(robot, 'plyFileNameStem')
                 error('The robot does not have a "plyFileNameStem" property.');
             end
@@ -52,7 +51,7 @@ classdef CollisionClass
                 error('Unknown robot type: %s', robot.plyFileNameStem);
             end
             
-            % Ensure the linkLeng array is the correct length
+            % Ensure the linkLeng array has the correct length
             if length(self.linkLeng) < numJoints
                 error('The linkLeng array has fewer elements than the number of joints.');
             end
@@ -63,9 +62,9 @@ classdef CollisionClass
                     self.centreJoints{j}(1), self.centreJoints{j}(2), self.centreJoints{j}(3), ...
                     self.jointX, self.jointY, self.linkLeng(j));
                 
-                % Create a surface plot for the ellipsoid
+                % Create a surface plot for the ellipsoid (keep them invisible)
                 self.JointEllipse(j) = surf(self.ellipX, self.ellipY, self.ellipZ, ...
-                    'FaceAlpha', 0.3, 'EdgeColor', 'none');
+                    'FaceAlpha', 0.0, 'EdgeColor', 'none', 'Visible', 'off');
             end
         end
         
@@ -86,26 +85,51 @@ classdef CollisionClass
             end
         end
         
-        function visualiseEllips(self)
-            % Visualize the updated ellipsoids
-            hold on;
-            for j = 1:length(self.JointEllipse)
-                % You can add more visualization configurations if needed
-                rotate(self.JointEllipse(j), [0 0 1], 0); % No rotation needed, just a placeholder
+        function outp = selfCollisionCheck(self)
+            % Check for self-collisions by comparing ellipsoids
+            numLinks = length(self.centreJoints);
+            outp = false;
+            
+            for i = 1:numLinks
+                for j = i+1:numLinks
+                    % Check if ellipsoids i and j intersect
+                    if self.areEllipsoidsIntersecting(self.centreJoints{i}, self.jointX, self.jointY, self.linkLeng(i), ...
+                                                      self.centreJoints{j}, self.jointX, self.jointY, self.linkLeng(j))
+                        outp = true; % A collision is detected
+                        return;
+                    end
+                end
             end
-            hold off;
+        end
+        
+        function outp = areEllipsoidsIntersecting(self, center1, rx1, ry1, rz1, center2, rx2, ry2, rz2)
+            % Approximate collision detection for ellipsoids based on their centers and radii
+            % Calculate the distance between the centers
+            distance = norm(center1 - center2);
+            
+            % Sum of the radii along the x, y, and z axes
+            sumRadiiX = rx1 + rx2;
+            sumRadiiY = ry1 + ry2;
+            sumRadiiZ = rz1 + rz2;
+            
+            % Check if the distance between centers is less than the sum of the radii
+            if distance < sqrt(sumRadiiX^2 + sumRadiiY^2 + sumRadiiZ^2)
+                outp = true; % Ellipsoids are intersecting
+            else
+                outp = false; % Ellipsoids are not intersecting
+            end
         end
         
         function clearEllipsoids(self)
-            % Clear the displayed ellipsoids
-            if ~isempty(self.JointEllipse)
-                for j = 1:length(self.JointEllipse)
-                    if isvalid(self.JointEllipse(j))
-                        delete(self.JointEllipse(j));
-                    end
-                end
-                self.JointEllipse = [];
+    % Clear the displayed ellipsoids
+    if ~isempty(self.JointEllipse)
+        for j = 1:length(self.JointEllipse)
+            if isvalid(self.JointEllipse(j))
+                delete(self.JointEllipse(j));
             end
+            end
+        self.JointEllipse = []; % Reset the JointEllipse array
         end
     end
+
 end
