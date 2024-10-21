@@ -1,7 +1,7 @@
 %% RobotClass
 
 classdef RobotClass
-    % Class for Robot functions
+    %Class for Robot functions
 
     methods (Static)
 
@@ -188,60 +188,47 @@ classdef RobotClass
             %
             % Outputs:
             %   - qEnd: Final joint configuration.
-    
-            collision = CollisionClass();
-        
         
             % Determine the end-effector pose based on direction.
+            % UPDATED POSITIONS
             switch lower(endEffDirection)
-                case 'left'
-                    endMove = transl(pose) * troty(pi/2);
-                case 'right'
-                    endMove = transl(pose) * troty(-pi/2);
-                case 'forward'
-                    endMove = transl(pose) * trotx(-pi/2);
-                case 'down'
-                    endMove = transl(pose) * trotx(pi);
-                otherwise
-                    error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
+                        case 'left'
+                            % Rotate around the Z-axis to face left
+                            endMove = transl(pose) * trotz(pi/2);
+                        case 'right'
+                            % Rotate around the Z-axis to face right
+                            endMove = transl(pose) * trotz(-pi/2);
+                        case 'forward'
+                            % No rotation needed, facing forward
+                            endMove = transl(pose);
+                        case 'down'
+                            % Rotate around the X-axis to point downwards
+                            endMove = transl(pose) * trotx(-pi/2);
+                        otherwise
+                error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
             end
+
         
             % Calculate the initial and target joint configurations.
             q0 = robot.model.getpos();
-            T_EE = robot.model.fkineUTS(q0);
-    
-            q1 = robot.model.ikcon(T_EE, q0);
+            q1 = robot.model.ikcon(robot.model.fkine(q0), q0);
             q2 = robot.model.ikcon(endMove, q0);
         
             % Generate trajectory using trapezoidal velocity profile.
             s = lspb(0, 1, steps);
-            qMatrix = nan(steps,length(robot.model.links));
+            qMatrix = nan(steps,length(robot.model.links));  % Create memory allocation for variables
             for i = 1:steps
-                qMatrix(i,:) = (1-s(i))*q0 + s(i)*q2;
+                qMatrix(i,:) = (1-s(i))*q1 + s(i)*q2;
             end
         
             % Set up gripper trajectory for pick up if needed.
             if pickUp
-                qPath1 = jtraj([0, 0, 0], [deg2rad(30), -deg2rad(30), 0], steps);
+                qPath1 = jtraj([0, 0, 0], [deg2rad(30), -deg2rad(30), 0], steps);  % Close for pick-up.
                 qPath2 = jtraj([0, 0, 0], [-deg2rad(30), deg2rad(30), 0], steps);
             end
-
-            i = 1;
+        
             % Execute the motion and animate the robot and grippers.
-            while i < steps
-    
-                % Check if the EE is colliding with ground
-                groundCheck = collision.LPIGround(robot);
-                if groundCheck == 1
-                    % Adjust the path using the AvoidCollision function.
-                    [qMatrix, restartLoop] = collision.AvoidCollision(robot, qMatrix, i, steps, q2);
-                    if restartLoop
-                        i = 1;  % Restart the loop with the updated path.
-                        continue;
-                    end
-                end
-
-                % Animate the robot.
+            for i = 1:steps
                 robot.model.animate(qMatrix(i, :));
         
                 % Update gripper positions.
@@ -258,18 +245,18 @@ classdef RobotClass
                     g2.model.animate(qPath2(i, :));
         
                     % Update payload vertices to reflect its transformation.
-                    updated_transform = robot.model.fkineUTS(qMatrix(i, :)) * transl(0, 0, 0.2);
+                    updated_transform = robot.model.fkine(qMatrix(i, :)).T * transl(0, 0, 0.2);
                     updated_vertices = [vertices, ones(size(vertices, 1), 1)] * updated_transform';
                     set(object, 'Vertices', updated_vertices(:, 1:3));
                 end
-
+        
                 drawnow();
-                i = i + 1;
             end
         
             % Return the final joint configuration.
             qEnd = qMatrix(end, :);
         end
+
 
         function GripperMove(g1, g2, varargin)
             % GripperMove controls the opening and closing of a gripper using two gripper models (g1 and g2).
@@ -329,6 +316,5 @@ classdef RobotClass
                 pause(0.001);  % Small pause for smooth animation.
             end
         end
-
     end
 end
