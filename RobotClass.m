@@ -1,14 +1,8 @@
 %% RobotClass
-
 classdef RobotClass
-    %Class for Robot functions
+    % Class for Robot functions
 
     methods (Static)
-
-        function RobotTeach(robot)
-            q = robot.model.getpos(); 
-            robot.model.teach(q);
-        end
 
         function Logs(robot, target)
             % Display Transforms
@@ -173,7 +167,7 @@ classdef RobotClass
 
         end
 
-        function qEnd = MoveRobot(robot, pose, steps, object, vertices, pickUp, endEffDirection, g1, g2)
+        function qGoal = MoveRobot(robot, pose, steps, object, vertices, pickUp, endEffDirection, g1, g2)
             % MoveRobot Moves a robot to a specified position and operates the gripper.
             %
             % Inputs:
@@ -190,45 +184,52 @@ classdef RobotClass
             %   - qEnd: Final joint configuration.
         
             % Determine the end-effector pose based on direction.
-            % UPDATED POSITIONS
             switch lower(endEffDirection)
-                        case 'left'
-                            % Rotate around the Z-axis to face left
-                            endMove = transl(pose) * trotz(pi/2);
-                        case 'right'
-                            % Rotate around the Z-axis to face right
-                            endMove = transl(pose) * trotz(-pi/2);
                         case 'forward'
-                            % No rotation needed, facing forward
-                            endMove = transl(pose);
-                        case 'down'
-                            % Rotate around the X-axis to point downwards
                             endMove = transl(pose) * trotx(-pi/2);
+                        case 'down'
+                            endMove = transl(pose) * trotx(pi);
+                        case 'back'
+                            endMove = transl(pose) * trotx(pi/2);
+                        case 'left'
+                            % Rotate around the X-axis to point downwards
+                            endMove = transl(pose) * troty(-pi/2);
                         otherwise
                 error('Invalid endEffDirection. Use "left", "right", "forward", or "down".');
             end
 
-        
+            collision = CollisionClass();
+
             % Calculate the initial and target joint configurations.
             q0 = robot.model.getpos();
             q1 = robot.model.ikcon(robot.model.fkine(q0), q0);
-            q2 = robot.model.ikcon(endMove, q0);
+            qGoal = robot.model.ikcon(endMove, q0);
         
-            % Generate trajectory using trapezoidal velocity profile.
-            s = lspb(0, 1, steps);
-            qMatrix = nan(steps,length(robot.model.links));  % Create memory allocation for variables
-            for i = 1:steps
-                qMatrix(i,:) = (1-s(i))*q1 + s(i)*q2;
-            end
+            % Generate trajectory using jtraj.
+            qMatrix = jtraj(q0,qGoal,steps);
         
             % Set up gripper trajectory for pick up if needed.
             if pickUp
                 qPath1 = jtraj([0, 0, 0], [deg2rad(30), -deg2rad(30), 0], steps);  % Close for pick-up.
                 qPath2 = jtraj([0, 0, 0], [-deg2rad(30), deg2rad(30), 0], steps);
             end
-        
+
+            i = 1;
+
             % Execute the motion and animate the robot and grippers.
-            for i = 1:steps
+            while i < steps
+
+                % Check if the EE is colliding with the ground.
+                groundCheck = collision.LPIGroundCheck(robot);
+                if groundCheck == 1
+                    % Adjust the path using the AvoidCollision function.
+                    [qMatrix, restartLoop] = collision.AvoidCollision(robot, qMatrix, i, steps, qGoal);
+                    if restartLoop
+                        i = 1;  % Restart the loop with the updated path.
+                        continue;
+                    end
+                end
+
                 robot.model.animate(qMatrix(i, :));
         
                 % Update gripper positions.
@@ -251,12 +252,12 @@ classdef RobotClass
                 end
         
                 drawnow();
+                i = i + 1;
             end
         
             % Return the final joint configuration.
-            qEnd = qMatrix(end, :);
+            qGoal = qMatrix(end, :);
         end
-
 
         function GripperMove(g1, g2, varargin)
             % GripperMove controls the opening and closing of a gripper using two gripper models (g1 and g2).

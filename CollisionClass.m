@@ -1,111 +1,100 @@
 classdef CollisionClass
-    properties (Access = protected)
-        ellipX;       % X-coordinates of ellipsoid surface
-        ellipY;       % Y-coordinates of ellipsoid surface
-        ellipZ;       % Z-coordinates of ellipsoid surface
-        jointX;       % Ellipsoid semi-axis length in the X-direction
-        jointY;       % Ellipsoid semi-axis length in the Y-direction
-        linkLeng;     % Length of each link used for ellipsoid Z-axis
-        JointEllipse; % Handles for the ellipsoid surfaces
-        centreJoints; % Centers of ellipsoids along the robot's joints
-    end
-    
-    methods
-        function self = CollisionClass() 
-            % Constructor for CollisionClass
-            % Initialize properties
-            self.JointEllipse = [];
-            self.centreJoints = {};
-        end
-        
-        function updateEllips(self, robot)
-            % Update the ellipsoids to reflect the robot's current configuration
-            % Clear any existing ellipsoids
-            self.clearEllipsoids();
-            
-            % Check if the plyFileNameStem property exists
-            if ~isprop(robot, 'plyFileNameStem')
-                error('The robot does not have a "plyFileNameStem" property.');
-            end
-            
-            % Get the current robot configuration
-            tempAng = robot.model.getpos;
-            [~, jointTr] = robot.model.fkine(tempAng);
-            
-            % Calculate the centers for each ellipsoid between joints
-            numJoints = length(jointTr) - 1;
-            self.centreJoints = cell(1, numJoints);
-            for i = 2:length(jointTr)
-                self.centreJoints{i - 1} = 0.5 * (jointTr(i - 1).t + jointTr(i).t);
-            end
-            
-            % Set ellipsoid dimensions based on the robot type
-            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
-                self.jointX = 0.058;
-                self.jointY = 0.058;
-                self.linkLeng = [0.15, 0.001, 0.11, 0.071, 0.095, 0.131, 0.095, 0.091, 0.051, 0.041, 0.001];
-            elseif strcmp(robot.plyFileNameStem, 'LinearUR3') || strcmp(robot.plyFileNameStem, 'LinearUR3e')
-                self.jointX = 0.058;
-                self.jointY = 0.058;
-                self.linkLeng = [0.12, 0.158, 0.075, 0.031, 0.032, 0.0853, 0.031];
+    methods (Static)
+
+        % Using LPI, check if any of the links will collide with the ground
+        function check = LPIGroundCheck(robot)            
+            planeNormal = [0,0,1];
+            pointOnPlane = [0,0,0];
+
+            check = 0;
+
+            if (strcmp(robot.plyFileNameStem, 'ColouredPanda'))
+                leftGripper = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,-0.127,0.215);
+                rightGripper = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,0.127,0.215);
+
+            elseif (strcmp(robot.plyFileNameStem, 'LinearUR3e'))
+                leftGripper = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,0.127,0.2312);
+                rightGripper = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,-0.127,0.2312);
             else
-                error('Unknown robot type: %s', robot.plyFileNameStem);
+                disp("Error, no robot found");
             end
-            
-            % Ensure the linkLeng array is the correct length
-            if length(self.linkLeng) < numJoints
-                error('The linkLeng array has fewer elements than the number of joints.');
-            end
-            
-            % Generate ellipsoids for each joint center
-            for j = 1:numJoints
-                [self.ellipX, self.ellipY, self.ellipZ] = ellipsoid(...
-                    self.centreJoints{j}(1), self.centreJoints{j}(2), self.centreJoints{j}(3), ...
-                    self.jointX, self.jointY, self.linkLeng(j));
-                
-                % Create a surface plot for the ellipsoid
-                self.JointEllipse(j) = surf(self.ellipX, self.ellipY, self.ellipZ, ...
-                    'FaceAlpha', 0.3, 'EdgeColor', 'none');
-            end
-        end
-        
-        function outp = collisionCheck(self, point)
-            % Check if a given point is within any ellipsoid
-            outp = false;
-            for i = 1:length(self.centreJoints)
-                % Calculate the algebraic distance to the ellipsoid
-                result = (point - self.centreJoints{i})' * ...
-                         ([self.jointX^-2, 0, 0; 0, self.jointY^-2, 0; 0, 0, self.linkLeng(i)^-2]) * ...
-                         (point - self.centreJoints{i});
-                
-                if result <= 1
-                    % Collision detected
-                    outp = true;
-                    return;
+
+            point1 = [leftGripper(1,4), leftGripper(2,4), leftGripper(3,4)];
+            point2 = [rightGripper(1,4), rightGripper(2,4), rightGripper(3,4)];
+
+            u = point2 - point1;
+            w = point1 - pointOnPlane;
+            D = dot(planeNormal,u);
+            N = -dot(planeNormal,w);
+
+            if abs(D) < 10^-7           % The segment is parallel to plane
+                if N == 0               % The segment lies in plane
+                    check = 2;
+                    return
+                else
+                    check = 0;          % No intersection
+                    return
                 end
             end
-        end
-        
-        function visualiseEllips(self)
-            % Visualize the updated ellipsoids
-            hold on;
-            for j = 1:length(self.JointEllipse)
-                % You can add more visualization configurations if needed
-                rotate(self.JointEllipse(j), [0 0 1], 0); % No rotation needed, just a placeholder
-            end
-            hold off;
-        end
-        
-        function clearEllipsoids(self)
-            % Clear the displayed ellipsoids
-            if ~isempty(self.JointEllipse)
-                for j = 1:length(self.JointEllipse)
-                    if isvalid(self.JointEllipse(j))
-                        delete(self.JointEllipse(j));
-                    end
-                end
-                self.JointEllipse = [];
+
+            %compute the intersection parameter
+            sI = N / D;
+
+            if (sI < 0 || sI > 1)
+                check = 3;              %The intersection point  lies outside the segment, so there is no intersection
+            else
+                check = 1;
             end
         end
+       
+        
+function [qMatrix, restartLoop] = AvoidCollision(robot, qMatrix, i, steps, q2)
+    % Adjusts the robot's path using `jtraj` for smooth motion.
+
+    disp('(Potential) Collision detected! Adjusting path...');
+
+    % Get the current pose of the robot.
+    poseNow = robot.model.getpos();
+    pointA = robot.model.fkineUTS(qMatrix(max(i-1, 1), :));
+    pointNext = robot.model.fkineUTS(qMatrix(i, :));
+    pointAvec = pointA(1:3, 4);
+    nextpointAvec = pointNext(1:3, 4);
+
+    % Calculate direction vector and normalize.
+    targetVec = nextpointAvec - pointAvec;
+    magn = norm(targetVec);
+    if magn < 1e-6
+        targetVec = [0, 0, 1];
+        magn = norm(targetVec);
     end
+    normalisedTarg = targetVec / magn;
+
+    % Create a new point away from the collision.
+    targetDist = -0.1;
+    newPoint = pointAvec + targetDist * normalisedTarg;
+    newPoint(3) = newPoint(3) + 0.1;
+
+    % Calculate the inverse kinematics for the adjusted target.
+    adjustedTransform = transl(newPoint);
+    poseAvoid = robot.model.ikcon(adjustedTransform, poseNow);
+
+    % Ensure that poseNow and poseAvoid are proper joint angle vectors.
+    poseNow = poseNow(:)';
+    poseAvoid = poseAvoid(:)';
+
+    % Generate trajectory using `jtraj` for smooth motion.
+    sidesteps = 10;
+    firstqMatrix = jtraj(poseNow, poseAvoid, sidesteps);
+    secondqMatrix = jtraj(firstqMatrix(end, :), q2, steps - sidesteps);
+
+    % Combine the two parts into the new `qMatrix`.
+    qMatrix = [firstqMatrix; secondqMatrix];
+    restartLoop = true;
+end
+
+
+
+
+    end
+        
 end
