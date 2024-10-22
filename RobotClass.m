@@ -78,9 +78,15 @@ classdef RobotClass
                 
                 % If a collision is detected, adjust the path.
                 if groundCheck == 1 || selfCheck
-                    disp('(potential) Collision! Adjusting path...');
-                    qMatrix = collF.adjustPath(robot, qMatrix, i, sidesteps, qGoal, groundCheck);
-                    i = 1; % Restart the loop with the new path.
+                    disp('Potential collision! Adjusting path...');
+                    % qMatrix = collF.adjustPath(robot, qMatrix, i, sidesteps, qGoal);
+                    % i = 1; % Restart the loop with the new path.
+                    % continue;
+
+                    % Call RRT to find a collision-free path from current position to qGoal.
+                    qPath = collF.RRT(robot, qMatrix(i, :), qGoal, 1000, 0.1);
+                    qMatrix = qPath;
+                    i = 1; % Restart the loop with the updated path.
                     continue;
                 end
 

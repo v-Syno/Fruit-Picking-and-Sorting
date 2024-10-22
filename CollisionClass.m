@@ -131,32 +131,51 @@ classdef CollisionClass
        
         end
 
-        function qMatrix = adjustPath(obj, robot, qMatrix, currentIndex, sidesteps, qEnd, groundCheck)
-            % Get the current and next points in the trajectory.
-            poseNow = robot.model.getpos();
-            pointNow = robot.model.fkineUTS(poseNow);
-            pointNext = robot.model.fkineUTS(qMatrix(currentIndex, :));
-            
-            % Calculate the adjustment direction.
-            targetVec = pointNext(1:3, 4) - pointNow(1:3, 4);
-            normalizedTarget = targetVec / norm(targetVec);
-            targetDist = -0.1; % Step back distance.
+        function qPath = RRT(obj,robot, qStart, qGoal, maxIterations, stepSize)
+            % RRT Algorithm for path planning
+            % Inputs:
+            %   - robot: The robot model.
+            %   - qStart: Starting joint configuration.
+            %   - qGoal: Goal joint configuration.
+            %   - maxIterations: Maximum number of iterations for building the tree.
+            %   - stepSize: Step size for moving towards random samples.
+            % Output:
+            %   - qPath: The collision-free path from start to goal.
         
-            % Calculate the new adjustment point.
-            newPoint = pointNow(1:3, 4) + targetDist * normalizedTarget;
-            if norm(newPoint - pointNow(1:3, 4)) < 0.01
-                newPoint = pointNow(1:3, 4) + [0.01, 0.01, 0.05]; % Apply a small shift to avoid zero-length adjustment.
+            % Initialize the RRT tree and parent relationship
+            tree = qStart;
+            parent = [0]; % 0 indicates the root has no parent.
+        
+            for i = 1:maxIterations
+                % Generate a random sample in the joint space
+                qRand = randConfig(robot);
+        
+                % Find nearest node in the tree
+                [qNear, nearIdx] = findNearest(tree, qRand);
+        
+                % Steer from qNear towards qRand within the step size
+                qNew = steerTowards(qNear, qRand, stepSize);
+        
+                % Check for collisions at qNew using existing collision checks
+                if ~obj.collisionCheckSelf(robot, qNew) && ~obj.collisionGroundLPI(robot)
+                    % Add qNew to the tree if no collision
+                    tree = [tree; qNew];
+                    parent = [parent, nearIdx];
+        
+                    % Check if the new configuration is close to the goal
+                    if norm(qNew - qGoal) < stepSize
+                        % Add qGoal to the tree and connect to the nearest node
+                        tree = [tree; qGoal];
+                        parent = [parent, size(tree, 1)];
+                        break;
+                    end
+                end
             end
-            if groundCheck == 1
-                newPoint(3) = newPoint(3) + 0.2; % Raise if colliding with ground.
-            end
-            
-            % Find the adjusted pose and generate a new trajectory.
-            poseAvoid = robot.model.ikcon(transl(newPoint), poseNow);
-            firstqMatrix = jtraj(poseNow, poseAvoid, sidesteps);
-            secondqMatrix = jtraj(poseAvoid, qEnd, size(qMatrix, 1) - sidesteps);
-            qMatrix = [firstqMatrix; secondqMatrix];
+        
+            % Extract the collision-free path from qStart to qGoal
+            qPath = extractPath(tree, parent);
         end
+
 
     end
 end

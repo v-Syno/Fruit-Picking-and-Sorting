@@ -148,11 +148,11 @@ RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, 'forward
 
 for i = 1:size(tomatoTreePos, 1)
     % Step 1: Move to the position of the tomato, slightly offset for approach.
-    approachPose = tomatoTreePos(i, :) + [0, -0.16, 0.03];
+    approachPose = tomatoTreePos(i, :);
     RobotControl.MoveRobot(harvesterBot, approachPose, steps, [], [], false, 'forward',right,left);
 
     % Step 2: Move directly above the tomato and then pick it up (close grippers).
-    tomatoPickupPose = tomatoTreePos(i, :) + [0, 0, gripperOffset];
+    tomatoPickupPose = tomatoTreePos(i, :);
     RobotControl.MoveRobot(harvesterBot, tomatoPickupPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward',right,left);
     RobotControl.GripperMove(right, left, 'close'); % Close gripper to hold the tomato.
 
@@ -161,7 +161,7 @@ for i = 1:size(tomatoTreePos, 1)
     RobotControl.MoveRobot(harvesterBot, hoverPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',right,left);
 
     % Step 4: Lower slightly into the crate.
-    lowerPose = unsortedPos(i, :) + [0, 0, 0.2];
+    lowerPose = unsortedPos(i, :);
     RobotControl.MoveRobot(harvesterBot, lowerPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',right,left);
 
     % Step 5: Release the tomato by opening the gripper.
