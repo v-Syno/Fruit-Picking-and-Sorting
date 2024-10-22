@@ -1,100 +1,162 @@
 classdef CollisionClass
-    methods (Static)
+    properties (Access = protected)
+        ellipX; 
+        ellipY;
+        ellipZ;
+        jointX;
+        jointY;
+        linkLeng;
+        JointEllipse;
+        centreJoints;
+    end
+    
+    methods
+        function obj = CollisionClass()
+            % Constructor for CollisionClass.
+            % It can initialize any required parameters or properties.
+        end
 
-        % Using LPI, check if any of the links will collide with the ground
-        function check = LPIGroundCheck(robot)            
-            planeNormal = [0,0,1];
-            pointOnPlane = [0,0,0];
+        function visualiseEllips(obj, robot, dur)
+            % Visualizes ellipsoids around the robot links for a given duration.
+            hold on
+            q0 = robot.model.getpos;
+            jointTr = robot.model.fkine(q0);
 
-            check = 0;
+            % Update joint-specific properties based on the robot type.
+            obj.updateJointProperties(robot, jointTr);
 
-            if (strcmp(robot.plyFileNameStem, 'ColouredPanda'))
-                leftGripper = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,-0.127,0.215);
-                rightGripper = (robot.model.fkineUTS(robot.model.getpos()))* transl(0,0.127,0.215);
-
-            elseif (strcmp(robot.plyFileNameStem, 'LinearUR3e'))
-                leftGripper = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,0.127,0.2312);
-                rightGripper = (robot.model.fkineUTS(robot.model.getpos()))*transl(0,-0.127,0.2312);
-            else
-                disp("Error, no robot found");
+            % Generate and display ellipsoids for each link.
+            for j = 1:length(obj.centreJoints)
+                [obj.ellipX, obj.ellipY, obj.ellipZ] = ellipsoid(obj.centreJoints{j}(1), obj.centreJoints{j}(2), obj.centreJoints{j}(3), obj.jointX, obj.jointY, obj.linkLeng(j));
+                obj.JointEllipse(j) = surf(obj.ellipX, obj.ellipY, obj.ellipZ); % Create the ellipsoid.
+                Jrot = rad2deg(jointTr(j).tr2rpy);
+                % Apply rotations to align the ellipsoids with the link orientation.
+                rotate(obj.JointEllipse(j), [0 0 1], Jrot(3), obj.centreJoints{j});
+                rotate(obj.JointEllipse(j), [0 1 0], Jrot(2), obj.centreJoints{j});
+                rotate(obj.JointEllipse(j), [1 0 0], Jrot(1), obj.centreJoints{j});
             end
 
-            point1 = [leftGripper(1,4), leftGripper(2,4), leftGripper(3,4)];
-            point2 = [rightGripper(1,4), rightGripper(2,4), rightGripper(3,4)];
+            pause(dur);
+            delete(obj.JointEllipse);
+        end
+        
+        function updateEllips(obj, robot)
+            % Updates the position of ellipsoids based on the robot's current pose.
+            q0 = robot.model.getpos;
+            jointTr = robot.model.fkine(q0);
 
-            u = point2 - point1;
-            w = point1 - pointOnPlane;
-            D = dot(planeNormal,u);
-            N = -dot(planeNormal,w);
+            % Update joint-specific properties based on the robot type.
+            obj.updateJointProperties(robot, jointTr);
+        end
 
-            if abs(D) < 10^-7           % The segment is parallel to plane
-                if N == 0               % The segment lies in plane
-                    check = 2;
-                    return
-                else
-                    check = 0;          % No intersection
-                    return
-                end
+        function updateJointProperties(obj, robot, jointTr)
+            % Helper method to update joint properties based on the robot type.
+            obj.centreJoints = cell(1, length(jointTr) - 1);
+            for i = 2:length(jointTr)
+                centre = 0.5 * (jointTr(i - 1).t + jointTr(i).t);
+                obj.centreJoints{i - 1} = centre;
             end
 
-            %compute the intersection parameter
-            sI = N / D;
-
-            if (sI < 0 || sI > 1)
-                check = 3;              %The intersection point  lies outside the segment, so there is no intersection
+            % Adjust joint-specific properties based on the robot type.
+            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
+                obj.jointX = 0.058;
+                obj.jointY = 0.058;
+                obj.linkLeng = [0.15, 0.001, 0.110, 0.071, 0.095, 0.131, 0.095, 0.091, 0.051, 0.041, 0.001];
+            elseif strcmp(robot.plyFileNameStem, 'LinearUR3e')
+                obj.jointX = 0.058;
+                obj.jointY = 0.058;
+                obj.linkLeng = [0.12, 0.158, 0.0935, 0.031, 0.032, 0.0853, 0.031];
             else
-                check = 1;
+                error('Unsupported robot type.');
             end
         end
+
+        function isCollision = collisionCheckSelf(obj, robot, Q)
+            % Checks for collisions between the end effector at Q and robot links.
+            isCollision = false;
+            obj.updateEllips(robot);
+            point = robot.model.fkineUTS(Q) * transl(0, 0, 0.15);
+            gripPoints = obj.generateGripPoints(point);
+
+            % Check each grip point against each ellipsoid.
+            for i = 1:length(obj.centreJoints)
+                for j = 1:size(gripPoints, 1)
+                    point = gripPoints(j, :)';
+                    result = (point - obj.centreJoints{i})' * diag([1/obj.jointX^2, 1/obj.jointY^2, 1/obj.linkLeng(i)^2]) * (point - obj.centreJoints{i});
+                    if result <= 1
+                        isCollision = true;
+                        return;
+                    end
+                end
+            end
+        end
+
+        function gripPoints = generateGripPoints(obj, point)
+            % Generates points along the gripper for collision checking.
+            point1 = point * transl(0, 0.0127, 0.2312);
+            point2 = point * transl(0, -0.0127, 0.2312);
+            pont = point * transl(0, 0, 0.05);
+            point1 = point1(1:3, 4);
+            point2 = point2(1:3, 4);
+            pont = pont(1:3, 4);
+            grip1 = [linspace(pont(1), point1(1), 4)', linspace(pont(2), point1(2), 4)', linspace(pont(3), point1(3), 4)'];
+            grip2 = [linspace(pont(1), point2(1), 4)', linspace(pont(2), point2(2), 4)', linspace(pont(3), point2(3), 4)'];
+            gripPoints = [grip1; grip2];
+        end
+
+        function check = collisionGroundLPI(obj, robot)
+            % collisionGroundLPI checks if the robot's gripper intersects with the ground plane.
+            planeNormal = [0, 0, 0.1];
+            pointOnPlane = [0, 0, 0];  % Ground plane is at z = 0.
+
+            T_EE = robot.model.fkineUTS(robot.model.getpos());
+        
+            % Define the line segment points based on the robot type.
+            if strcmp(robot.plyFileNameStem, 'ColouredPanda')
+                leftGripper = T_EE * transl(0,-0.127,0.215);
+                rightGripper = T-EE * transl(0,0.127,0.215);
+
+            elseif strcmp(robot.plyFileNameStem, 'LinearUR3e')
+                leftGripper = T_EE * transl(0,0.127,0.2312);
+                rightGripper = T_EE * transl(0,-0.127,0.2312);
+            else
+                error('Unsupported robot type.');
+            end
+
+            point1 = leftGripper(1:3,4)' ;
+            point2 = rightGripper(1:3,4)' ;
+        
+            % Use the LinePlaneIntersection function to find the intersection.
+            [~, check] = LinePlaneIntersection(planeNormal, pointOnPlane, point1, point2);
        
+        end
+
+        function qMatrix = adjustPath(obj, robot, qMatrix, currentIndex, sidesteps, qEnd, groundCheck)
+            % Get the current and next points in the trajectory.
+            poseNow = robot.model.getpos();
+            pointNow = robot.model.fkineUTS(poseNow);
+            pointNext = robot.model.fkineUTS(qMatrix(currentIndex, :));
+            
+            % Calculate the adjustment direction.
+            targetVec = pointNext(1:3, 4) - pointNow(1:3, 4);
+            normalizedTarget = targetVec / norm(targetVec);
+            targetDist = -0.1; % Step back distance.
         
-function [qMatrix, restartLoop] = AvoidCollision(robot, qMatrix, i, steps, q2)
-    % Adjusts the robot's path using `jtraj` for smooth motion.
-
-    disp('(Potential) Collision detected! Adjusting path...');
-
-    % Get the current pose of the robot.
-    poseNow = robot.model.getpos();
-    pointA = robot.model.fkineUTS(qMatrix(max(i-1, 1), :));
-    pointNext = robot.model.fkineUTS(qMatrix(i, :));
-    pointAvec = pointA(1:3, 4);
-    nextpointAvec = pointNext(1:3, 4);
-
-    % Calculate direction vector and normalize.
-    targetVec = nextpointAvec - pointAvec;
-    magn = norm(targetVec);
-    if magn < 1e-6
-        targetVec = [0, 0, 1];
-        magn = norm(targetVec);
-    end
-    normalisedTarg = targetVec / magn;
-
-    % Create a new point away from the collision.
-    targetDist = -0.1;
-    newPoint = pointAvec + targetDist * normalisedTarg;
-    newPoint(3) = newPoint(3) + 0.1;
-
-    % Calculate the inverse kinematics for the adjusted target.
-    adjustedTransform = transl(newPoint);
-    poseAvoid = robot.model.ikcon(adjustedTransform, poseNow);
-
-    % Ensure that poseNow and poseAvoid are proper joint angle vectors.
-    poseNow = poseNow(:)';
-    poseAvoid = poseAvoid(:)';
-
-    % Generate trajectory using `jtraj` for smooth motion.
-    sidesteps = 10;
-    firstqMatrix = jtraj(poseNow, poseAvoid, sidesteps);
-    secondqMatrix = jtraj(firstqMatrix(end, :), q2, steps - sidesteps);
-
-    % Combine the two parts into the new `qMatrix`.
-    qMatrix = [firstqMatrix; secondqMatrix];
-    restartLoop = true;
-end
-
-
-
+            % Calculate the new adjustment point.
+            newPoint = pointNow(1:3, 4) + targetDist * normalizedTarget;
+            if norm(newPoint - pointNow(1:3, 4)) < 0.01
+                newPoint = pointNow(1:3, 4) + [0.01, 0.01, 0.05]; % Apply a small shift to avoid zero-length adjustment.
+            end
+            if groundCheck == 1
+                newPoint(3) = newPoint(3) + 0.2; % Raise if colliding with ground.
+            end
+            
+            % Find the adjusted pose and generate a new trajectory.
+            poseAvoid = robot.model.ikcon(transl(newPoint), poseNow);
+            firstqMatrix = jtraj(poseNow, poseAvoid, sidesteps);
+            secondqMatrix = jtraj(poseAvoid, qEnd, size(qMatrix, 1) - sidesteps);
+            qMatrix = [firstqMatrix; secondqMatrix];
+        end
 
     end
-        
 end

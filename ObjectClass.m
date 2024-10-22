@@ -28,6 +28,7 @@ classdef ObjectClass
                 set(objects{i}, 'Vertices', verts(:, 1:3));
             end
         end
+        
         function [objects, vertices] = PlaceObjects2(objectName, objectLocation, options)
         % Place objects and adjust scaling and rotation
         
@@ -74,5 +75,15 @@ classdef ObjectClass
                 set(objects{i}, 'Vertices', vertices{i});
             end
         end
+    
+        function UpdateObjectPosition(robot, qMatrix, object, vertices)
+            % Compute the transformation matrix for the end-effector.
+            transMatrix = robot.model.fkineUTS(qMatrix) * transl(0, 0, 0.2);
+            
+            % Transform object vertices.
+            transformedVertices = [vertices, ones(size(vertices, 1), 1)] * transMatrix';
+            set(object, 'Vertices', transformedVertices(:, 1:3));
+        end
+    
     end
 end
