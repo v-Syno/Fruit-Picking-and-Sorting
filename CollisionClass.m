@@ -107,7 +107,7 @@ classdef CollisionClass
         function check = collisionGroundLPI(obj, robot)
             % collisionGroundLPI checks if the robot's gripper intersects with the ground plane.
             planeNormal = [0, 0, 0.1];
-            pointOnPlane = [0, 0, 0];  % Ground plane is at z = 0.
+            pointOnPlane = [0, 0, 0.01];  % Ground plane is at z = 0.01.
 
             T_EE = robot.model.fkineUTS(robot.model.getpos());
         
@@ -129,51 +129,6 @@ classdef CollisionClass
             % Use the LinePlaneIntersection function to find the intersection.
             [~, check] = LinePlaneIntersection(planeNormal, pointOnPlane, point1, point2);
        
-        end
-
-        function qPath = RRT(obj,robot, qStart, qGoal, maxIterations, stepSize)
-            % RRT Algorithm for path planning
-            % Inputs:
-            %   - robot: The robot model.
-            %   - qStart: Starting joint configuration.
-            %   - qGoal: Goal joint configuration.
-            %   - maxIterations: Maximum number of iterations for building the tree.
-            %   - stepSize: Step size for moving towards random samples.
-            % Output:
-            %   - qPath: The collision-free path from start to goal.
-        
-            % Initialize the RRT tree and parent relationship
-            tree = qStart;
-            parent = [0]; % 0 indicates the root has no parent.
-        
-            for i = 1:maxIterations
-                % Generate a random sample in the joint space
-                qRand = randConfig(robot);
-        
-                % Find nearest node in the tree
-                [qNear, nearIdx] = findNearest(tree, qRand);
-        
-                % Steer from qNear towards qRand within the step size
-                qNew = steerTowards(qNear, qRand, stepSize);
-        
-                % Check for collisions at qNew using existing collision checks
-                if ~obj.collisionCheckSelf(robot, qNew) && ~obj.collisionGroundLPI(robot)
-                    % Add qNew to the tree if no collision
-                    tree = [tree; qNew];
-                    parent = [parent, nearIdx];
-        
-                    % Check if the new configuration is close to the goal
-                    if norm(qNew - qGoal) < stepSize
-                        % Add qGoal to the tree and connect to the nearest node
-                        tree = [tree; qGoal];
-                        parent = [parent, size(tree, 1)];
-                        break;
-                    end
-                end
-            end
-        
-            % Extract the collision-free path from qStart to qGoal
-            qPath = extractPath(tree, parent);
         end
 
 

@@ -67,19 +67,28 @@ classdef RobotClass
             collF = CollisionClass();
             object = ObjectClass();
 
-            i = 1; 
+            i = 1;
+            sidesteps = 30;
+        
             % Iterate through the trajectory steps.
             while i <= steps
-
-                % Check for collisions only if not following a waypoint path.
+                if i < 5
+                    disp('giving time to move')
+                    drawnow();
+                    i = i+1;
+                    continue
+                end
+                % Check for collisions.
                 groundCheck = collF.collisionGroundLPI(robot);
                 selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
-
+                
                 % If a collision is detected, adjust the path.
                 if groundCheck == 1 || selfCheck
-                    disp('Potential Ground Collision!')
-                    break;
-                end   
+                    disp('Potential collision! Adjusting path...');
+                    qMatrix = collF.adjustPath(robot, qMatrix, i, sidesteps, qGoal, groundCheck);
+                    i = 1; % Restart the loop with the new path.
+                    continue;
+                end
 
                 % Gripper base transform for UR3.
                 pos1 = robot.model.fkineUTS(robot.model.getpos())*transl(0,-0.0127,0.05)*troty(-pi/2);%z0.0612
@@ -90,14 +99,15 @@ classdef RobotClass
                 g1.model.animate(g1.model.getpos());
                 g2.model.animate(g2.model.getpos());
 
+        
                 % Animate the robot.
                 robot.model.animate(qMatrix(i, :));
-
+                
                 % Update object position if holding.
                 if holdingObject
                     object.UpdateObjectPosition(robot, qMatrix(i, :), payload, vertices);
                 end
-
+        
                 drawnow();
                 i = i + 1;
             end
