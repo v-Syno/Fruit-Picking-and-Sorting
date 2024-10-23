@@ -162,26 +162,26 @@ classdef CollisionClass
             end
         end
 
-        function qAdjusted = AdjustPathForCollision(robot, qCurrent, pose, EEDir)
+         function qAdjusted = AdjustPathForCollision(obj,robot, qCurrent, pose, EEDir,g1,g2)
             % Adjust the path if a collision is detected by modifying the orientation.
             % Create a small rotation adjustment to avoid collision.
             deltaAngle = 5; % Degrees for each adjustment.
-        
+
             % Adjust the orientation incrementally until no collision is detected.
             for angle = deltaAngle:deltaAngle:90
                 % Rotate the end-effector slightly to find a collision-free configuration.
                 EEDirAdjusted = trotx(angle, 'deg') * EEDir;
-        
+
                 % Recompute IK with the adjusted end-effector direction.
                 T_adjusted = transl(pose) * EEDirAdjusted;
                 qAdjusted = robot.model.ikcon(T_adjusted, qCurrent);
-        
+
                 % Check if the adjusted configuration is collision-free.
-                if ~isSelfCollision(robot, qAdjusted, g1, g2)
+                if ~obj.isSelfCollision(robot, qAdjusted, g1, g2)
                     return; % Return the adjusted configuration.
                 end
             end
-        
+
             % If no collision-free path is found, return the current configuration.
             qAdjusted = qCurrent;
         end

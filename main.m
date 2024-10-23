@@ -78,8 +78,8 @@ potatoSize = [0.06,0.11,0.05];
 % tomatoes on trees
 tomatoTreePos = [
     -0.6, 1.1, 0.35;
-    -0.7, 1.05 0.4;
-    0.75, 1.15, 0.16;    
+    -0.7, 1.05 0.4;  
+    0.75, 1.15, 0.16;  
     ];
 
 % use PlaceObjects NOT PlaceObjects2 as thats used for non moving
@@ -96,7 +96,7 @@ potatoGroundPos = [
 [potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
 
 % Meeting point for both robots
-meetPose = [0,0.2,0.5];
+meetPose = [0.1,0.1,0.5];
 
 % unsorted box 
 boxPos = [
@@ -119,8 +119,8 @@ harvesterBot = LinearUR3e(transl(0.4,0.6,robotRaised));
 gripperLength = 0.24;
 gripperHeight = 0.025;
 
-rightHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,0.0127,0.0612)*trotx(pi/2); % Base position right gripper offset from UR3's end effector (0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
-leftHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,-0.0127,0.0612)*trotx(pi/2); % Base position left gripper offset from UR3's end effector (-0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
+rightHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0.0127,0,0.0612)*trotx(pi/2)*troty(-pi/2); % Base position right gripper offset from UR3's end effector (0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
+leftHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(-0.0127,0,0.0612)*trotx(pi/2)*troty(-pi/2); % Base position left gripper offset from UR3's end effector (-0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
 rightHarvester = GripRight(rightHarvesterPos); % initiate right gripper
 leftHarvester = GripLeft(leftHarvesterPos); % initial left gripper
 
@@ -134,11 +134,11 @@ RobotControl.GripperMove(rightHarvester,leftHarvester,'open');
 
 %% Testing Harvester Bot Movements with Tomatoes
 % Number of steps for smoother movement.
-steps = 100;
+steps = 75;
 
 % neutral pose
-neutralPose = [0,0.6,0.5];
-standByPose = [0,0.6,0.5];
+neutralPose = [0,0.5,0.4];
+standByPose = [0,0.5,0.4];
 RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
 
 % Loop through each tomato for testing.
@@ -153,7 +153,7 @@ for i = 1:size(tomatoTreePos, 1)
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
     % Move to the meeting point with the tomato.
-    RobotControl.MoveRobot(harvesterBot, meetPose, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester,trotx(90,'deg'));
+    RobotControl.MoveRobot(harvesterBot, meetPose, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester,trotz(180,'deg')*trotx(-90,'deg'));
     
     % Release the object at the meeting point.
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'open');

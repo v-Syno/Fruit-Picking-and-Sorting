@@ -44,7 +44,6 @@ classdef RobotClass
         function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject,g1,g2,EEDir)
 
             % Initialise classes
-            object = ObjectClass();
             collision = CollisionClass();
             
             % Get pose with desired EE
@@ -61,20 +60,10 @@ classdef RobotClass
             % Generate a smoother joint trajectory using `jtraj`.
             qMatrix = jtraj(q0, qGoal, steps);
 
-            % Define tolerance and adjustment parameters.
-            tolerance = 0.01; % Maximum allowable position error.
-            maxIterations = 5; % Max iterations for corrections.
-
             % Iterate through the trajectory steps.
             for i = 1:steps
 
                 qCurrent = qMatrix(i, :);   
-
-                % Check for self-collision.
-                if isSelfCollision(robot, qCurrent, g1, g2)
-                    % If a collision is detected, adjust the orientation.
-                    qCurrent = AdjustPathForCollision(robot, qCurrent, pose, EEDir);
-                end
 
                 % Animate the robot.
                 robot.model.animate(qCurrent);
@@ -83,7 +72,6 @@ classdef RobotClass
 
                 drawnow();
             end
-            qGoal = AdjustEndEffectorPosition(robot, qGoal, pose, EEDir, tolerance, maxIterations);
         end
 
         function GripperMove(right, left, state)
@@ -111,5 +99,7 @@ classdef RobotClass
                 drawnow();
             end
         end
+
+
     end
 end
