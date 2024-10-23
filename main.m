@@ -146,6 +146,8 @@ RobotControl.GripperMove(right,left,'open');
 neutralPose = [0, 0.6, 0.4];
 RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, 'forward',right,left);
 
+% singularity
+
 for i = 1:size(tomatoTreePos, 1)
     % Step 1: Move to the position of the tomato, slightly offset for approach.
     approachPose = tomatoTreePos(i, :);
