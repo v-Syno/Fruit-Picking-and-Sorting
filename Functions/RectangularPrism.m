@@ -9,14 +9,28 @@ if nargin<4
 end
 hold on
 
-vertex(1,:)=lower;
-vertex(2,:)=[upper(1),lower(2:3)];
-vertex(3,:)=[upper(1:2),lower(3)];
-vertex(4,:)=[upper(1),lower(2),upper(3)];
-vertex(5,:)=[lower(1),upper(2:3)];
-vertex(6,:)=[lower(1:2),upper(3)];
-vertex(7,:)=[lower(1),upper(2),lower(3)];
-vertex(8,:)=upper;
+% change dimensions of prism here with lower and upper bounds
+lower = [-0.25, 1.2, 0]; 
+upper = [0.25, 1.5, 0.5]; 
+
+% Now, calculate the vertices of the prism based on these new bounds
+vertex(1,:) = lower;
+vertex(2,:) = [upper(1), lower(2:3)];
+vertex(3,:) = [upper(1:2), lower(3)];
+vertex(4,:) = [upper(1), lower(2), upper(3)];
+vertex(5,:) = [lower(1 ), upper(2:3)];
+vertex(6,:) = [lower(1:2), upper(3)];
+vertex(7,:) = [lower(1), upper(2), lower(3)];
+vertex(8,:) = upper;
+
+% vertex(1,:)=lower;
+% vertex(2,:)=[upper(1),lower(2:3)];
+% vertex(3,:)=[upper(1:2),lower(3)];
+% vertex(4,:)=[upper(1),lower(2),upper(3)];
+% vertex(5,:)=[lower(1),upper(2:3)];
+% vertex(6,:)=[lower(1:2),upper(3)];
+% vertex(7,:)=[lower(1),upper(2),lower(3)];
+% vertex(8,:)=upper;
 
 face=[1,2,3;1,3,7;
      1,6,5;1,7,5;

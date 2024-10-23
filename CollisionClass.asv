@@ -133,66 +133,38 @@ classdef CollisionClass
     end
 
     methods (Static)
-        function result = IsIntersectionPointInsideRectangle(intersectP, rectVerts)
-        % Ensure rectVerts contains exactly four vertices
-        if size(rectVerts, 1) ~= 4
-            error('rectVerts must contain exactly four vertices.');
-        end
-        
-        % Define two edges of the rectangle
-        edge1 = rectVerts(2, :) - rectVerts(1, :);
-        edge2 = rectVerts(4, :) - rectVerts(1, :);
-        
-        % Vector from the first vertex to the intersection point
-        vectorToPoint = intersectP - rectVerts(1, :);
-        
-        % Project the vector onto the edges
-        dot1 = dot(vectorToPoint, edge1) / dot(edge1, edge1);
-        dot2 = dot(vectorToPoint, edge2) / dot(edge2, edge2);
-        
-        % Check if the point is within the bounds of the rectangle
-        if dot1 >= 0 && dot1 <= 1 && dot2 >= 0 && dot2 <= 1
-            result = true;
-        else
-            result = false;
-        end
-    end
-
         function result = IsCollisionWithPrism(robot, q, faces, vertex, faceNormals)
-        % ISCOLLISIONWITHPRISM Check for collisions between the robot
-        % and the prism.
-        % Input:
-        %   robot - SerialLink robot model
-        %   q - Joint configuration (1xN array)
-        %   faces, vertex, faceNormals - Mesh data for the prism
-        % Output:
-        %   result - Boolean indicating whether a collision is detected
-        
-        result = false;
-        
-        % Get the transforms of all joints
-        tr = CollisionClass.GetLinkPoses(q, robot);
-        
-        % Check for intersections between robot links and prism faces
-        for i = 1 : size(tr, 3) - 1
-            for faceIndex = 1:size(faces, 1)
-                vertOnPlane = vertex(faces(faceIndex, 1)', :);
-                [intersectP, check] = CollisionClass.LinePlaneIntersection(...
-                    faceNormals(faceIndex, :), vertOnPlane, ...
-                    tr(1:3, 4, i)', tr(1:3, 4, i + 1)');
-                
-                % If there's a valid intersection, check if it's inside the rectangle
-                if check == 1 && CollisionClass.IsIntersectionPointInsideRectangle(...
-                        intersectP, vertex(faces(faceIndex, :)', :))
-                    % Collision detected
-                    result = true;
-                    return; % Exit early if a collision is found
+            % ISCOLLISIONWITHPRISM Check for collisions between the robot
+            % and the prism.
+            % Input:
+            %   robot - SerialLink robot model
+            %   q - Joint configuration (1xN array)
+            %   faces, vertex, faceNormals - Mesh data for the prism
+            % Output:
+            %   result - Boolean indicating whether a collision is detected
+            
+            result = false;
+            
+            % Get the transforms of all joints
+            tr = CollisionClass.GetLinkPoses(q, robot);
+            
+            % Check for intersections between robot links and prism faces
+            for i = 1 : size(tr, 3) - 1
+                for faceIndex = 1:size(faces, 1)
+                    vertOnPlane = vertex(faces(faceIndex, 1)', :);
+                    [intersectP, check] = CollisionClass.LinePlaneIntersection(...
+                        faceNormals(faceIndex, :), vertOnPlane, ...
+                        tr(1:3, 4, i)', tr(1:3, 4, i + 1)');
+                    
+                    if check == 1 && CollisionClass.IsIntersectionPointInsideTriangle(...
+                            intersectP, vertex(faces(faceIndex, :)', :))
+                        % Collision detected
+                        result = true;
+                        return; % Exit early if a collision is found
+                    end
                 end
             end
-        end
-    end
-
-
+           
     function result = IsCollision(robot, q, faces, vertex, faceNormals)
         % ISCOLLISION Check for collisions along a given robot configuration
         % Input:

@@ -137,6 +137,47 @@ leftSorter = GripLeft(leftSorterPos); % initial left gripper
 RobotControl.GripperMove(rightHarvester,leftHarvester,'open');
 RobotControl.GripperMove(rightSorter,leftSorter,'open');
 
+%% testing way point thingo
+
+% Temporary prism representing scarecrow
+centerpnt = [0, 1.5, 0];
+side = 1.5;
+plotOptions.plotFaces = true;
+[vertex, faces, faceNormals] = RectangularPrism(centerpnt - side/2, centerpnt + side/2, plotOptions);
+axis equal
+camlight
+%%
+% Define start and end configurations for the 7-DOF robot
+qStart = zeros(1, 7); % Initial configuration with 7 zeros
+qEnd = [pi/6, -pi/4, pi/3, -pi/6, pi/4, -pi/3, pi/8]; % Target configuration
+
+% Generate the trajectory with 50 steps
+qMatrix = jtraj(qStart, qEnd, 50);
+
+% Ensure qMatrix has the correct number of columns
+[numSteps, numCols] = size(qMatrix);
+if numCols ~= 7
+    error('qMatrix should have 7 columns, corresponding to the 7 joints.');
+end
+
+% Check for collisions with the prism at each step
+for i = 1:steps
+    % Check if the robot is colliding with the prism
+    collisionDetected = CollisionClass.IsCollisionWithPrism(harvesterBot.model, qMatrix(i, :), faces, vertex, faceNormals);
+    
+    % If a collision is detected, stop the movement
+    if collisionDetected
+        disp('Collision with prism detected!');
+        break; % Exit the loop if a collision is detected
+    end
+    
+    % Animate the robot's motion
+    harvesterBot.model.animate(qMatrix(i, :));
+    drawnow();
+end
+
+
+
 %% Harvesting 
 % Neutral position to start from.
 neutralPose = [0, 0.6, 0.4];
@@ -168,4 +209,5 @@ for i = 1:size(tomatoTreePos, 1)
     % Step 6: Move back to the hover position before transitioning to the next task.
     RobotControl.MoveRobot(harvesterBot, hoverPose, steps, [], [], false, 'down',rightHarvester,leftHarvester);
 end
+
 

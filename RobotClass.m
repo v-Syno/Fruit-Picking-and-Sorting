@@ -41,67 +41,73 @@ classdef RobotClass
             qGoal = qMatrix(end, :);
         end
 
-        function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject, endEffDirection,g1,g2)
-            % Setup the end-effector transformation based on the direction.
-            switch lower(endEffDirection)
-                case 'forward'
-                    T_EE = transl(pose) * trotx(-pi/2);
-                case 'backwards'
-                    T_EE = transl(pose) * trotx(pi/2);
-                case 'down'
-                    T_EE = transl(pose) * trotx(pi);
-                case 'up'
-                    T_EE = transl(pose);
-                otherwise
-                    error('Invalid end-effector direction');
-            end
-        
-            % Get initial and goal joint configurations.
-            q0 = robot.model.getpos();
-            qGoal = robot.model.ikcon(T_EE, q0);
-            
-            % Generate a smoother joint trajectory using `jtraj`.
-            qMatrix = jtraj(q0, qGoal, steps);
-            
-            % Initialize collision and object functions.
-            collF = CollisionClass();
-            object = ObjectClass();
+        function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject, endEffDirection, g1, g2)
+    % Setup the end-effector transformation based on the direction.
+    switch lower(endEffDirection)
+        case 'forward'
+            T_EE = transl(pose) * trotx(-pi/2);
+        case 'backwards'
+            T_EE = transl(pose) * trotx(pi/2);
+        case 'down'
+            T_EE = transl(pose) * trotx(pi);
+        case 'up'
+            T_EE = transl(pose);
+        otherwise
+            error('Invalid end-effector direction');
+    end
 
-            i = 1; 
-            % Iterate through the trajectory steps.
-            while i <= steps
+    % Get initial and goal joint configurations.
+    q0 = robot.model.getpos();
+    qGoal = robot.model.ikcon(T_EE, q0);
+    
+    % Generate a smoother joint trajectory using `jtraj`.
+    qMatrix = jtraj(q0, qGoal, steps);
+    
+    % Initialize collision and object functions.
+    collF = CollisionClass();
+    object = ObjectClass();
 
-                % Check for collisions only if not following a waypoint path.
-                groundCheck = collF.collisionGroundLPI(robot);
-                selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
+    i = 1; 
+    % Iterate through the trajectory steps.
+    while i <= steps
+        % Check for collisions only if not following a waypoint path.
+        groundCheck = collF.collisionGroundLPI(robot);
+        selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
 
-                % If a collision is detected, adjust the path.
-                if groundCheck == 1 || selfCheck
-                    disp('Potential Ground Collision!')
-                    break;
-                end   
-
-                % Gripper base transform for UR3.
-                pos1 = robot.model.fkineUTS(robot.model.getpos())*transl(0,-0.0127,0.05)*troty(-pi/2);%z0.0612
-                pos2 = robot.model.fkineUTS(robot.model.getpos())*transl(0,0.0127,0.05)*troty(-pi/2);%z0.0612
-
-                g1.model.base = pos1; 
-                g2.model.base = pos2; 
-                g1.model.animate(g1.model.getpos());
-                g2.model.animate(g2.model.getpos());
-
-                % Animate the robot.
-                robot.model.animate(qMatrix(i, :));
-
-                % Update object position if holding.
-                if holdingObject
-                    object.UpdateObjectPosition(robot, qMatrix(i, :), payload, vertices);
-                end
-
-                drawnow();
-                i = i + 1;
-            end
+        % If a collision is detected, adjust the path.
+        if groundCheck == 1 || selfCheck
+            disp('Potential Ground Collision!');
+            break;
+        end   
+%% changes made by our lord and saviour
+        % Update gripper positions if g1 and g2 are valid.
+        if ~isempty(g1) && isprop(g1, 'model') && ismethod(g1.model, 'animate')
+            % Gripper base transform for the right gripper
+            pos1 = robot.model.fkineUTS(robot.model.getpos()) * transl(0, -0.0127, 0.05) * troty(-pi/2);
+            g1.model.base = pos1; 
+            g1.model.animate(g1.model.getpos());
         end
+
+        if ~isempty(g2) && isprop(g2, 'model') && ismethod(g2.model, 'animate')
+            % Gripper base transform for the left gripper
+            pos2 = robot.model.fkineUTS(robot.model.getpos()) * transl(0, 0.0127, 0.05) * troty(-pi/2);
+            g2.model.base = pos2; 
+            g2.model.animate(g2.model.getpos());
+        end
+
+        % Animate the robot.
+        robot.model.animate(qMatrix(i, :));
+
+        % Update object position if holding.
+        if holdingObject
+            object.UpdateObjectPosition(robot, qMatrix(i, :), payload, vertices);
+        end
+
+        drawnow();
+        i = i + 1;
+    end
+end
+
 
         function GripperMove(right, left, state)
             % Controls the opening or closing of the gripper.
