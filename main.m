@@ -27,7 +27,7 @@ surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wal
 
 % Trees
 tree = 'treeSkinnier.ply';
-ObjectClass.PlaceObjects2(tree, [-0.7,1.4,0.01], 'Scale', [0.15,0.15,0.3]); % left tree (big)
+ObjectClass.PlaceObjects2(tree, [-0.7,1.2,0.01], 'Scale', [0.15,0.15,0.3]); % left tree (big)
 ObjectClass.PlaceObjects2(tree, [0.7,1.2,0.01], 'Scale', [0.1, 0.1,0.2]); % right tree (small)
 
 % Box
@@ -74,16 +74,14 @@ potato = 'potato.ply';
 tomatoSize = [0.07,0.07,0.06];
 potatoSize = [0.06,0.11,0.05];
 
-crateBase = 0.06;
-tomatoMidPt = 0.03;
-potatoMidPt = 0.025;
 
 % tomatoes on trees
 tomatoTreePos = [
-    -0.6, 1.3, 0.32;
-    -0.7, 1.25 0.4;
+    -0.6, 1.1, 0.35;
+    -0.7, 1.05 0.4;
     0.75, 1.15, 0.16;    
     ];
+
 % use PlaceObjects NOT PlaceObjects2 as thats used for non moving
 % components
 [tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
@@ -91,14 +89,14 @@ tomatoTreePos = [
 % potatoes
 potatoGroundPos = [
     -0.4, 1.11, 0.01;
-    0.35, 1.38, 0.01;
+    0.35, 1.3, 0.01;
     0.45, 1.2, 0.01;    
     ];
 
 [potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
 
 % Meeting point for both robots
-meetPose = [-0.5,0,0.5];
+meetPose = [0,0.2,0.5];
 
 % unsorted box 
 boxPos = [
@@ -111,14 +109,11 @@ boxPos = [
     ];
 
 %% Task %%
-
-steps = 100;
-
 robotRaised = 0.05;
 
 % Initialize robots and their respective collision functions
-sortingBot = Panda(transl(0.75,-0.25,robotRaised) * trotz(pi));
 harvesterBot = LinearUR3e(transl(0.4,0.6,robotRaised));
+% sortingBot = Panda(transl(0.75,-0.25,robotRaised) * trotz(pi));
 
 % Initialise gripper on UR3 end effector
 gripperLength = 0.24;
@@ -129,43 +124,39 @@ leftHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*tr
 rightHarvester = GripRight(rightHarvesterPos); % initiate right gripper
 leftHarvester = GripLeft(leftHarvesterPos); % initial left gripper
 
-rightSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,-0.0127,0.05)*trotx(-pi/2)*trotz(pi);  % Base position right gripper offset from Panda's end effector 
-leftSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,0.0127,0.05)*trotx(-pi/2)*trotz(pi); % Base position left gripper offset from Panda's end effector 
-rightSorter = GripRight(rightSorterPos); % initiate right gripper
-leftSorter = GripLeft(leftSorterPos); % initial left gripper 
+% rightSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,-0.0127,0.05)*trotx(-pi/2)*trotz(pi);  % Base position right gripper offset from Panda's end effector 
+% leftSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,0.0127,0.05)*trotx(-pi/2)*trotz(pi); % Base position left gripper offset from Panda's end effector 
+% rightSorter = GripRight(rightSorterPos); % initiate right gripper
+% leftSorter = GripLeft(leftSorterPos); % initial left gripper 
 
 RobotControl.GripperMove(rightHarvester,leftHarvester,'open');
-RobotControl.GripperMove(rightSorter,leftSorter,'open');
+% RobotControl.GripperMove(rightSorter,leftSorter,'open');
 
-%% Harvesting 
-% Neutral position to start from.
-neutralPose = [0, 0.6, 0.4];
-RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, 'forward',rightHarvester,leftHarvester);
+%% Testing Harvester Bot Movements with Tomatoes
+% Number of steps for smoother movement.
+steps = 100;
 
+% neutral pose
+neutralPose = [0,0.6,0.5];
+standByPose = [0,0.6,0.5];
+RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
 
+% Loop through each tomato for testing.
 for i = 1:size(tomatoTreePos, 1)
-    % Step 1: Move to the position of the tomato, slightly offset for approach.
-    approachPose = tomatoTreePos(i, :);
-    RobotControl.MoveRobot(harvesterBot, approachPose, steps, [], [], false, 'forward',rightHarvester,leftHarvester);
-
-    % Step 2: Move directly to the tomato and then pick it up (close grippers).
-    tomatoPickupPose = tomatoTreePos(i, :);
-    RobotControl.MoveRobot(harvesterBot, tomatoPickupPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward',rightHarvester,leftHarvester);
-
-    RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Close gripper to hold the tomato.
-
-    % Step 3: Move the tomato to the unsorted crate, hover above the crate.
-    hoverPose = boxPos(i, :) + [0, 0, 0.5];
-    RobotControl.MoveRobot(harvesterBot, hoverPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',rightHarvester,leftHarvester);
-
-    % Step 4: Lower slightly into the crate.
-    lowerPose = boxPos(i, :) + [0, 0, 0.25];
-    RobotControl.MoveRobot(harvesterBot, lowerPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',rightHarvester,leftHarvester);
-
-    % Step 5: Release the tomato by opening the gripper.
-    RobotControl.GripperMove(rightHarvester, leftHarvester, 'open'); % Release the object.
+    % Approach the tomato.
+    approachPose = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight];
+    RobotControl.MoveRobot(harvesterBot, approachPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
     
-    % Step 6: Move back to the hover position before transitioning to the next task.
-    RobotControl.MoveRobot(harvesterBot, hoverPose, steps, [], [], false, 'down',rightHarvester,leftHarvester);
-end
+    % Move to the tomato and simulate pickup.
+    pickupTomato = tomatoTreePos(i,:) + [0, -gripperLength, gripperHeight];
+    RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester,trotx(270,'deg'));
+    RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
+    % Move to the meeting point with the tomato.
+    RobotControl.MoveRobot(harvesterBot, meetPose, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester,trotx(90,'deg'));
+    
+    % Release the object at the meeting point.
+    RobotControl.GripperMove(rightHarvester, leftHarvester, 'open');
+
+    RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
+end

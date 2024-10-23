@@ -131,6 +131,62 @@ classdef CollisionClass
        
         end
 
+        function collisionDetected = isSelfCollision(obj,robot, qCurrent, g1, g2)
+            % Check if the gripper is colliding with the robot's body.
+            % This is a simplified placeholder for a collision detection mechanism.
+            % Implement a more complex collision-checking method if needed.
+            collisionDetected = false;
+        
+            % Get the transformation of the gripper.
+            T_gripper = robot.model.fkineUTS(qCurrent);
+        
+            % Extract the position of the gripper.
+            gripperPos = transl(T_gripper);
+        
+            % Define a simple collision check threshold (distance).
+            collisionThreshold = 0.05; % Adjust as needed.
+        
+            % Check if the gripper is too close to any part of the robot.
+            for link = 1:robot.model.n
+                T_link = robot.model.fkineUTS(qCurrent, link); % Get the transformation of each link.
+                linkPos = transl(T_link);
+        
+                % Calculate the distance between the gripper and each link.
+                distance = norm(gripperPos - linkPos);
+        
+                % If the distance is below the threshold, mark as a collision.
+                if distance < collisionThreshold
+                    collisionDetected = true;
+                    break;
+                end
+            end
+        end
+
+        function qAdjusted = AdjustPathForCollision(robot, qCurrent, pose, EEDir)
+            % Adjust the path if a collision is detected by modifying the orientation.
+            % Create a small rotation adjustment to avoid collision.
+            deltaAngle = 5; % Degrees for each adjustment.
+        
+            % Adjust the orientation incrementally until no collision is detected.
+            for angle = deltaAngle:deltaAngle:90
+                % Rotate the end-effector slightly to find a collision-free configuration.
+                EEDirAdjusted = trotx(angle, 'deg') * EEDir;
+        
+                % Recompute IK with the adjusted end-effector direction.
+                T_adjusted = transl(pose) * EEDirAdjusted;
+                qAdjusted = robot.model.ikcon(T_adjusted, qCurrent);
+        
+                % Check if the adjusted configuration is collision-free.
+                if ~isSelfCollision(robot, qAdjusted, g1, g2)
+                    return; % Return the adjusted configuration.
+                end
+            end
+        
+            % If no collision-free path is found, return the current configuration.
+            qAdjusted = qCurrent;
+        end
+
+
 
     end
 end

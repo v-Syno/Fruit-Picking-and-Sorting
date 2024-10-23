@@ -41,66 +41,49 @@ classdef RobotClass
             qGoal = qMatrix(end, :);
         end
 
-        function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject, endEffDirection,g1,g2)
-            % Setup the end-effector transformation based on the direction.
-            switch lower(endEffDirection)
-                case 'forward'
-                    T_EE = transl(pose) * trotx(-pi/2);
-                case 'backwards'
-                    T_EE = transl(pose) * trotx(pi/2);
-                case 'down'
-                    T_EE = transl(pose) * trotx(pi);
-                case 'up'
-                    T_EE = transl(pose);
-                otherwise
-                    error('Invalid end-effector direction');
-            end
+        function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject,g1,g2,EEDir)
+
+            % Initialise classes
+            object = ObjectClass();
+            collision = CollisionClass();
+            
+            % Get pose with desired EE
+            T_EE = transl(pose) * EEDir;
+
+            % Avoid kinematic singularities
+            minBendAngle = 5;
         
             % Get initial and goal joint configurations.
             q0 = robot.model.getpos();
+            q0 = AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
             qGoal = robot.model.ikcon(T_EE, q0);
             
             % Generate a smoother joint trajectory using `jtraj`.
             qMatrix = jtraj(q0, qGoal, steps);
-            
-            % Initialize collision and object functions.
-            collF = CollisionClass();
-            object = ObjectClass();
 
-            i = 1; 
+            % Define tolerance and adjustment parameters.
+            tolerance = 0.01; % Maximum allowable position error.
+            maxIterations = 5; % Max iterations for corrections.
+
             % Iterate through the trajectory steps.
-            while i <= steps
+            for i = 1:steps
 
-                % Check for collisions only if not following a waypoint path.
-                groundCheck = collF.collisionGroundLPI(robot);
-                selfCheck = collF.collisionCheckSelf(robot, qMatrix(i, :));
+                qCurrent = qMatrix(i, :);   
 
-                % If a collision is detected, adjust the path.
-                if groundCheck == 1 || selfCheck
-                    disp('Potential Ground Collision!')
-                    break;
-                end   
-
-                % Gripper base transform for UR3.
-                pos1 = robot.model.fkineUTS(robot.model.getpos())*transl(0,-0.0127,0.05)*troty(-pi/2);%z0.0612
-                pos2 = robot.model.fkineUTS(robot.model.getpos())*transl(0,0.0127,0.05)*troty(-pi/2);%z0.0612
-
-                g1.model.base = pos1; 
-                g2.model.base = pos2; 
-                g1.model.animate(g1.model.getpos());
-                g2.model.animate(g2.model.getpos());
-
-                % Animate the robot.
-                robot.model.animate(qMatrix(i, :));
-
-                % Update object position if holding.
-                if holdingObject
-                    object.UpdateObjectPosition(robot, qMatrix(i, :), payload, vertices);
+                % Check for self-collision.
+                if isSelfCollision(robot, qCurrent, g1, g2)
+                    % If a collision is detected, adjust the orientation.
+                    qCurrent = AdjustPathForCollision(robot, qCurrent, pose, EEDir);
                 end
 
+                % Animate the robot.
+                robot.model.animate(qCurrent);
+
+                UpdateGripperAndObject(robot, g1, g2, qCurrent, payload, vertices, holdingObject);
+
                 drawnow();
-                i = i + 1;
             end
+            qGoal = AdjustEndEffectorPosition(robot, qGoal, pose, EEDir, tolerance, maxIterations);
         end
 
         function GripperMove(right, left, state)
