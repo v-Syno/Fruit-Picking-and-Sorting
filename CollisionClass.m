@@ -107,7 +107,7 @@ classdef CollisionClass
         function check = collisionGroundLPI(obj, robot)
             % collisionGroundLPI checks if the robot's gripper intersects with the ground plane.
             planeNormal = [0, 0, 0.1];
-            pointOnPlane = [0, 0, 0];  % Ground plane is at z = 0.
+            pointOnPlane = [0, 0, 0.01];  % Ground plane is at z = 0.01.
 
             T_EE = robot.model.fkineUTS(robot.model.getpos());
         
@@ -131,32 +131,6 @@ classdef CollisionClass
        
         end
 
-        function qMatrix = adjustPath(obj, robot, qMatrix, currentIndex, sidesteps, qEnd, groundCheck)
-            % Get the current and next points in the trajectory.
-            poseNow = robot.model.getpos();
-            pointNow = robot.model.fkineUTS(poseNow);
-            pointNext = robot.model.fkineUTS(qMatrix(currentIndex, :));
-            
-            % Calculate the adjustment direction.
-            targetVec = pointNext(1:3, 4) - pointNow(1:3, 4);
-            normalizedTarget = targetVec / norm(targetVec);
-            targetDist = -0.1; % Step back distance.
-        
-            % Calculate the new adjustment point.
-            newPoint = pointNow(1:3, 4) + targetDist * normalizedTarget;
-            if norm(newPoint - pointNow(1:3, 4)) < 0.01
-                newPoint = pointNow(1:3, 4) + [0.01, 0.01, 0.05]; % Apply a small shift to avoid zero-length adjustment.
-            end
-            if groundCheck == 1
-                newPoint(3) = newPoint(3) + 0.2; % Raise if colliding with ground.
-            end
-            
-            % Find the adjusted pose and generate a new trajectory.
-            poseAvoid = robot.model.ikcon(transl(newPoint), poseNow);
-            firstqMatrix = jtraj(poseNow, poseAvoid, sidesteps);
-            secondqMatrix = jtraj(poseAvoid, qEnd, size(qMatrix, 1) - sidesteps);
-            qMatrix = [firstqMatrix; secondqMatrix];
-        end
 
     end
 end

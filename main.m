@@ -30,8 +30,13 @@ surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wal
 
 % Trees
 tree = 'treeSkinnier.ply';
+<<<<<<< HEAD
 ObjectClass.PlaceObjects2(tree, [-0.5,1.4,0.01], 'Scale', [0.3,0.3,0.3]); % left tree (big)
 ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.2, 0.2,0.2]); % right tree (small)
+=======
+ObjectClass.PlaceObjects2(tree, [-0.5,1.4,0.01], 'Scale', [0.15,0.15,0.3]); % left tree (big)
+ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.1, 0.1,0.2]); % right tree (small)
+>>>>>>> origin/Daniel-2
 
 % Boxes
 crate = 'crate.ply';
@@ -39,11 +44,20 @@ fruitCrate = crate;
 vegCrate = crate;
 ObjectClass.PlaceObjects2(crate, [-0.25,0.05,0.06], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
 ObjectClass.PlaceObjects2(fruitCrate, [0,-0.8,0.5], 'Scale', [0.5,1,0.5]); % tomato
+<<<<<<< HEAD
 ObjectClass.PlaceObjects2(vegCrate, [0.5,-1.1,0.5], 'Scale', [0.5,1,0.5]); % potato
+=======
+ObjectClass.PlaceObjects2(vegCrate, [0.5,-0.8,0.5], 'Scale', [0.5,1,0.5]); % potato
+>>>>>>> origin/Daniel-2
 
 % table (raised surface for linearUR3e
 slab = 'table.ply';
 ObjectClass.PlaceObjects2(slab, [0,0.6,-0.2], 'Scale', [0.6,0.4,0.5]);
+ObjectClass.PlaceObjects2(slab, [0.75,-0.05,-0.2], 'Scale', [0.2,0.2,0.5]);
+
+% table (for sorted crates)
+table = 'table.ply';
+ObjectClass.PlaceObjects2(table, [0.25,-0.95,0], 'Scale', [0.5,0.6,0.9]);
 
 % table (for sorted crates)
 table = 'table.ply';
@@ -109,6 +123,7 @@ potatoGroundPos = [
 
 
 % unsorted box 
+<<<<<<< HEAD
         % updated positions to suit new crate location
 unsortedPos = [
     -0.4, 0.12, 0.01;
@@ -117,11 +132,24 @@ unsortedPos = [
    -0.4, -0.02, 0.01;
    -0.25, -0.02, 0.01;
    -0.1, -0.02, 0.01;
+=======
+unsortedPos = [
+    -0.1, -0.02, 0.015;
+    -0.4, 0.12, 0.015;
+    -0.25, 0.12, 0.015;
+    -0.1, 0.12, 0.015;
+    -0.4, -0.02, 0.015;
+    -0.25, -0.02, 0.015;
+>>>>>>> origin/Daniel-2
     ];
 
 % tomatoes sorting box 
 % new position ontop of table
+<<<<<<< HEAD
 tomatoTreePos = [
+=======
+tomatoSortedPos = [
+>>>>>>> origin/Daniel-2
    0, -0.65, 0.475;
    0, -0.8, 0.475;
    0, -0.95, 0.475;
@@ -129,7 +157,11 @@ tomatoTreePos = [
 
 % potatoes sorting box
 % new position ontop of table
+<<<<<<< HEAD
 potatoSorted = [
+=======
+potatoSortedPos = [
+>>>>>>> origin/Daniel-2
     0.5, -0.95, 0.475;
     0.5, -1.1, 0.475;
     0.5, -1.25, 0.475;
@@ -139,15 +171,20 @@ potatoSorted = [
 
 steps = 100;
 
-HarvesterBotRaised = 0.05;
+robotRaised = 0.05;
 
 % Initialize robots and their respective collision functions
+<<<<<<< HEAD
  sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
 harvesterBot = LinearUR3e(transl(0.4,0.6,HarvesterBotRaised));
+=======
+% sortingBot = Panda(transl(0.75,-0.05,robotRaised) * trotz(pi));
+harvesterBot = LinearUR3e(transl(0.4,0.6,robotRaised));
+>>>>>>> origin/Daniel-2
 
 % Initialise gripper on UR3 end effector
-gripperLength = 0.16;
-gripperOffset = 0.02;
+gripperLength = 0.24;
+gripperHeight = 0.025;
 
 rightPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,0.0127,0.0612)*trotx(pi/2); % Base position right gripper offset from UR3's end effector (0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
 leftPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,-0.0127,0.0612)*trotx(pi/2); % Base position left gripper offset from UR3's end effector (-0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
@@ -161,13 +198,15 @@ RobotControl.GripperMove(right,left,'open');
 neutralPose = [0, 0.6, 0.4];
 RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, 'forward',right,left);
 
+% singularity
+
 for i = 1:size(tomatoTreePos, 1)
     % Step 1: Move to the position of the tomato, slightly offset for approach.
-    approachPose = tomatoTreePos(i, :) + [0, -0.16, 0.03];
+    approachPose = tomatoTreePos(i, :) + [0,-gripperLength,gripperHeight];
     RobotControl.MoveRobot(harvesterBot, approachPose, steps, [], [], false, 'forward',right,left);
 
     % Step 2: Move directly above the tomato and then pick it up (close grippers).
-    tomatoPickupPose = tomatoTreePos(i, :) + [0, 0, gripperOffset];
+    tomatoPickupPose = tomatoTreePos(i, :) + [0,-gripperLength,gripperHeight];
     RobotControl.MoveRobot(harvesterBot, tomatoPickupPose, steps, tomatoObject{i}, tomatoVertices{i}, false, 'forward',right,left);
     RobotControl.GripperMove(right, left, 'close'); % Close gripper to hold the tomato.
 
@@ -176,14 +215,14 @@ for i = 1:size(tomatoTreePos, 1)
     RobotControl.MoveRobot(harvesterBot, hoverPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',right,left);
 
     % Step 4: Lower slightly into the crate.
-    lowerPose = unsortedPos(i, :) + [0, 0, 0.2];
+    lowerPose = unsortedPos(i, :) + [0, 0, 0.25];
     RobotControl.MoveRobot(harvesterBot, lowerPose, steps, tomatoObject{i}, tomatoVertices{i}, true, 'down',right,left);
 
     % Step 5: Release the tomato by opening the gripper.
     RobotControl.GripperMove(right, left, 'open'); % Release the object.
     
     % Step 6: Move back to the hover position before transitioning to the next task.
-    RobotControl.MoveRobot(harvesterBot, hoverPose, steps, [], [], false, 'forward',right,left);
+    RobotControl.MoveRobot(harvesterBot, hoverPose, steps, [], [], false, 'down',right,left);
 end
 
 % Return to the neutral pose after completing the tasks.
