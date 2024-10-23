@@ -30,20 +30,24 @@ surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wal
 
 % Trees
 tree = 'treeSkinnier.ply';
-ObjectClass.PlaceObjects2(tree, [-0.5,1.4,0.01], 'Scale', [0.2,0.2,0.15]); % left tree (big)
-ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.1, 0.1,0.1]); % right tree (small)
+ObjectClass.PlaceObjects2(tree, [-0.5,1.4,0.01], 'Scale', [0.3,0.3,0.3]); % left tree (big)
+ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.2, 0.2,0.2]); % right tree (small)
 
 % Boxes
 crate = 'crate.ply';
 fruitCrate = crate;
 vegCrate = crate;
 ObjectClass.PlaceObjects2(crate, [-0.25,0.05,0.06], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
-ObjectClass.PlaceObjects2(fruitCrate, [-0.25,-0.5,0.06], 'Scale', [0.5,1,0.5]); % tomato
-ObjectClass.PlaceObjects2(vegCrate, [0.5,-1.1,0.06], 'Scale', [0.5,1,0.5]); % potato
+ObjectClass.PlaceObjects2(fruitCrate, [0,-0.8,0.5], 'Scale', [0.5,1,0.5]); % tomato
+ObjectClass.PlaceObjects2(vegCrate, [0.5,-1.1,0.5], 'Scale', [0.5,1,0.5]); % potato
 
 % table (raised surface for linearUR3e
 slab = 'table.ply';
 ObjectClass.PlaceObjects2(slab, [0,0.6,-0.2], 'Scale', [0.6,0.4,0.5]);
+
+% table (for sorted crates)
+table = 'table.ply';
+ObjectClass.PlaceObjects2(table, [0.25,-0.95,0], 'Scale', [0.5,0.6,0.9]);
 
 % Safety Features
 
@@ -60,6 +64,17 @@ sign2 = imread('sign2.png'); % PPE sign
 surf([0.7, 1.7; 0.7, 1.7], [-1.56, -1.56; -1.56, -1.56], [0.5, 0.5; 0.1, 0.1], 'CData', sign1, 'FaceColor', 'texturemap'); % Robot sign protection
 surf([-0.75, 0.25; -0.75, 0.25], [-1.51, -1.51; -1.51, -1.51], [0.5, 0.5; 0.1, 0.1], 'CData', sign2, 'FaceColor', 'texturemap'); % PPE sign protection
 
+%% testing placement
+potato = 'potato.ply';
+% tomatoes in crates
+potatoGroundPos = [
+    -0.5, 1.1, 0.32;
+    -0.35,1.16 0.4;
+    0.5,1, 0.3;
+   ];
+% add table height of sorted crates + z height of sorted tomato
+[potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
+
 %% Grow Fruits
 
 % Define fruits
@@ -75,9 +90,9 @@ potatoMidPt = 0.025;
 
 % tomatoes on trees
 tomatoTreePos = [
-    -0.5, 1.25, 0.15;
-    -0.35,1.3 0.2;
-    0.5,1.1, 0.09;    
+    -0.5, 1.12, 0.32;
+    -0.35,1.16 0.4;
+    0.5,1.1, 0.16;    
     ];
 % use PlaceObjects NOT PlaceObjects2 as thats used for non moving
 % components
@@ -94,30 +109,30 @@ potatoGroundPos = [
 
 
 % unsorted box 
-        % update positions
+        % updated positions to suit new crate location
 unsortedPos = [
-    -0.15, 0.12, 0.01;
-    0, 0.12, 0.01;
-    0.15, 0.12, 0.01;
-    -0.15, -0.02, 0.01;
-    0, -0.02, 0.01;
-    0.15, -0.02, 0.01;
+    -0.4, 0.12, 0.01;
+   -0.25, 0.12, 0.01;
+   -0.1, 0.12, 0.01;
+   -0.4, -0.02, 0.01;
+   -0.25, -0.02, 0.01;
+   -0.1, -0.02, 0.01;
     ];
 
 % tomatoes sorting box 
-% add mid point to z value to account for size of fruit (no clipping)
-tomatoSorted = [
-   -0.25, -0.35, 0.015;
-   -0.25, -0.5, 0.015;
-   -0.25, -0.65, 0.015;
+% new position ontop of table
+tomatoTreePos = [
+   0, -0.65, 0.475;
+   0, -0.8, 0.475;
+   0, -0.95, 0.475;
    ];
 
 % potatoes sorting box
-% add mid point to z value to account for size of fruit (no clipping)
+% new position ontop of table
 potatoSorted = [
-    0.5, -0.95, 0.03;
-    0.5, -1.1, 0.03;
-    0.5, -1.25, 0.03;
+    0.5, -0.95, 0.475;
+    0.5, -1.1, 0.475;
+    0.5, -1.25, 0.475;
    ];
 
 %% Fruit Sorting with Collision Detection for Panda and UR3
@@ -127,7 +142,7 @@ steps = 100;
 HarvesterBotRaised = 0.05;
 
 % Initialize robots and their respective collision functions
-% sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
+ sortingBot = Panda(transl(0.5,-0.3,0.01) * trotz(pi/2));
 harvesterBot = LinearUR3e(transl(0.4,0.6,HarvesterBotRaised));
 
 % Initialise gripper on UR3 end effector
