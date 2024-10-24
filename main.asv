@@ -9,65 +9,23 @@ close all;
 set(0,'DefaultFigureWindowStyle','docked')
 view(3)
 hold on
+axis([-1.8, 1.8, -1.8, 1.8, 0.01, 2]);
+
 
 Objects = ObjectClass();
 RobotControl = RobotClass();
 
-% Setup Environment %
-
-axis([-1.8, 1.8, -1.8, 1.8, 0.01, 2]);
-
-floor = imread ('grass.jpg'); % Floor Image
-soil = imread ('soil.jpg'); % Soil Image
-wall = imread ('sky.PNG'); % wall Image
-
-surf([-1.8,-1.8;1.8,1.8],[-1.8,1.8;-1.8,1.8],[0.01,0.01;0.01,0.01] ,'CData',floor ,'FaceColor','texturemap'); %Floor
-surf([-1.8,-1.8;1.8,1.8],[1,1.8;1,1.8],[0.01,0.01;0.01,0.02] ,'CData',soil ,'FaceColor','texturemap') % Soil - veggie patch
-surf([-1.8, 1.8; -1.8, 1.8], [1.8, 1.8; 1.8, 1.8], [1.8, 1.8; 0, 0] ,'CData',wall ,'FaceColor','texturemap'); % Back wall (y = 1.8)
-
-% Trees
-tree = 'treeSkinnier.ply';
-ObjectClass.PlaceObjects2(tree, [-0.7,1.2,0.01], 'Scale', [0.15,0.15,0.3]); % left tree (big)
-ObjectClass.PlaceObjects2(tree, [0.7,1.2,0.01], 'Scale', [0.1, 0.1,0.2]); % right tree (small)
-
-% Box
-crate = 'crate.ply';
-ObjectClass.PlaceObjects2(crate, [0.25,-0.85,0.55], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
-
-
-% table (raised surface for linearUR3e
-slab = 'table.ply';
-ObjectClass.PlaceObjects2(slab, [0,0.6,-0.2], 'Scale', [0.6,0.4,0.5]);
-ObjectClass.PlaceObjects2(slab, [0.75,-0.25,-0.2], 'Scale', [0.2,0.2,0.5]);
-
-% table
-table = 'table.ply';
+% Initialise global variables
 tableZ = 0.5;
-ObjectClass.PlaceObjects2(table, [0,-0.95,0], 'Scale', [0.5,0.4,1]);
+gripperLength = 0.24;
+gripperHeight = 0.025;
 
-% Safety Features
+% Setup Environment
+LoadEnvironment();
 
-% Guard rails to secure the zone from external hazards
-barrier = 'barrier.ply';
-ObjectClass.PlaceObjects2(barrier, [1.2,-1.5,0], 'Scale', [1, 1, 0.5], 'Rotate', [0, 0, 0]);
-ObjectClass.PlaceObjects2(barrier, [-0.3,-1.5,0], 'Scale', [1, 1, 0.5], 'Rotate', [0, 0, 0]);
-ObjectClass.PlaceObjects2(barrier, [-1.8,-1.5,0], 'Scale', [1, 1, 0.5], 'Rotate', [0, 0, 0]);
+%% Grow Plants
 
-% warning signs
-sign1 = imread('sign1.png'); % robot sign
-sign2 = imread('sign2.png'); % PPE sign
-
-surf([0.7, 1.7; 0.7, 1.7], [-1.56, -1.56; -1.56, -1.56], [0.5, 0.5; 0.1, 0.1], 'CData', sign1, 'FaceColor', 'texturemap'); % Robot sign protection
-surf([-0.75, 0.25; -0.75, 0.25], [-1.51, -1.51; -1.51, -1.51], [0.5, 0.5; 0.1, 0.1], 'CData', sign2, 'FaceColor', 'texturemap'); % PPE sign protection
-
-% Estop
-estop = 'estop.ply';
-ObjectClass.PlaceObjects2(estop, [-0.4,-1.1,tableZ], 'Scale', [0.5,0.5,0.5]);
-
-
-%% Grow Fruits
-
-% Define fruits
+% Define objects
 tomato = 'tomato.ply';
 potato = 'potato.ply';
 
@@ -77,90 +35,148 @@ potatoSize = [0.06,0.11,0.05];
 
 % tomatoes on trees
 tomatoTreePos = [
+    0.55, 1.11, 0.35;
+    0.5, 1.1, 0.4;
+    0.4, 1.15, 0.26; 
+
+    -0.4, 1.15, 0.16;  
+
     -0.6, 1.1, 0.35;
-    -0.7, 1.05 0.4;
-    0.75, 1.15, 0.16;    
+    -0.7, 1.05 0.4;  
     ];
 
-% use PlaceObjects NOT PlaceObjects2 as thats used for non moving
-% components
+% use PlaceObjects NOT PlaceObjects2 as thats used for non moving objects
+
 [tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
 
-% potatoes
-potatoGroundPos = [
-    -0.4, 1.11, 0.01;
-    0.35, 1.3, 0.01;
-    0.45, 1.2, 0.01;    
-    ];
-
-[potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
-
-% Meeting point for both robots
-meetPose = [0.1,0.1,0.5];
+% % potatoes
+% potatoGroundPos = [
+%     0.55, 1.11, 0.01;
+%     0.5, 1.27, 0.01;
+%     0.35, 1.2, 0.01;    
+%     ];
+% 
+% [potatoObject, potatoVertices] = Objects.PlaceObjects(potato, potatoGroundPos);
 
 % unsorted box 
 boxPos = [
-    0.4, -0.92, tableZ;
-    0.25, -0.92, tableZ;
-    0.1, -0.92, tableZ;
-    0.4, -0.77, tableZ;
-    0.25, -0.77, tableZ;
-    0.1, -0.77, tableZ;
+    0.15, 0.025, 0.01;
+    0, 0.025, 0.01;
+    -0.15, 0.025, 0.01;
+    0.15, 0.18, 0.01;
+    0, 0.18, 0.01;
+    -0.15, 0.18, 0.01;
     ];
 
-%% Task %%
-robotRaised = 0.05;
+% sorted box positions
+OKPos = [
+    0.95,-0.8,tableZ,
+    0.85,-0.8,tableZ,
+    0.75,-0.8,tableZ,
+    ];
 
-% Initialize robots and their respective collision functions
-harvesterBot = LinearUR3e(transl(0.4,0.6,robotRaised));
-% sortingBot = Panda(transl(0.75,-0.25,robotRaised) * trotz(pi));
+compostPos = [
+    0.55,-0.8,tableZ,
+    0.45,-0.8,tableZ,
+    0.35,-0.8,tableZ,
+    ];
 
-% Initialise gripper on UR3 end effector
-gripperLength = 0.24;
-gripperHeight = 0.025;
+%% Load Robots
 
-rightHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,0.0127,0.0612)*trotx(pi/2); % Base position right gripper offset from UR3's end effector (0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
-leftHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0,-0.0127,0.0612)*trotx(pi/2); % Base position left gripper offset from UR3's end effector (-0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
-rightHarvester = GripRight(rightHarvesterPos); % initiate right gripper
-leftHarvester = GripLeft(leftHarvesterPos); % initial left gripper
+[harvesterRobot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
 
-% rightSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,-0.0127,0.05)*trotx(-pi/2)*trotz(pi);  % Base position right gripper offset from Panda's end effector 
-% leftSorterPos = (sortingBot.model.fkineUTS(sortingBot.model.getpos()))* transl(0,0.0127,0.05)*trotx(-pi/2)*trotz(pi); % Base position left gripper offset from Panda's end effector 
-% rightSorter = GripRight(rightSorterPos); % initiate right gripper
-% leftSorter = GripLeft(leftSorterPos); % initial left gripper 
-
-RobotControl.GripperMove(rightHarvester,leftHarvester,'open');
-% RobotControl.GripperMove(rightSorter,leftSorter,'open');
 
 %% Testing Harvester Bot Movements with Tomatoes
 % Number of steps for smoother movement.
 steps = 75;
 
-% neutral pose
-neutralPose = [0,0.6,0.5];
-standByPose = [0,0.6,0.5];
-RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
+% Orientation for the end-effector.
+pointForwards = trotx(270, 'deg');
+pointDown = trotx(180,'deg');
 
 % Loop through each tomato for testing.
 for i = 1:size(tomatoTreePos, 1)
-    % Approach the tomato.
-    approachPose = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight];
-    RobotControl.MoveRobot(harvesterBot, approachPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
-    
-    % Move to the tomato and simulate pickup.
-    pickupTomato = tomatoTreePos(i,:) + [0, -gripperLength, gripperHeight];
-    RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester,trotx(270,'deg'));
+    % Define positions for this loop.
+    startPos = tomatoTreePos(i, :) + [0, -0.3, 0.1]; % Slight offset to approach the tomato.
+    pickupTomato = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight]; % Position to pick up the tomato.
+    unsortedBoxPose = boxPos(i, :) + [0, 0, 0.5]; % Hover position above the box.
+    finalPos = boxPos(i, :) + [0, 0, 0.2]; % Slightly lower over the box for drop-off.
+
+    % Step 1: Move to the position near the tomato (approach).
+    RobotControl.MoveRobot(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, pointForwards);
+
+    % Step 2: Move directly to the tomato and simulate pickup.
+    RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester, pointForwards);
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
-    % Move to the meeting point with the tomato.
-    h
-    RobotControl.MoveRobot(harvesterBot, meetPose/2, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester,trotx(90,'deg'));
+    % Step 3: Move back slightly after gripping.
+    moveBackPos = pickupTomato + [0, -0.05, 0]; % Move back 5 cm along the y-axis.
+    RobotControl.MoveRobot(harvesterBot, moveBackPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointForwards);
 
-    % Move to the meeting point with the tomato.
-    RobotControl.MoveRobot(harvesterBot, meetPose, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester,trotx(90,'deg'));
-    
-    % Release the object at the meeting point.
+    % Step 4: Rotate +180 degrees to align with the box.
+    % Update the EE direction to face the box.
+    pointTowardsBox = trotx(90, 'deg');
+    RobotControl.MoveRobot(harvesterBot, unsortedBoxPose, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointTowardsBox);
+
+    % Step 5: Lower down to the box.
+    RobotControl.MoveRobot(harvesterBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointTowardsBox);
+
+    % Step 6: Release the object and update the object position.
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'open');
+    ObjectClass.DropObject(harvesterBot, tomatoObject{i}, tomatoVertices{i}, 0.05); % Adjust to slightly drop the object.
 
-    RobotControl.MoveRobot(harvesterBot, neutralPose, steps, [], [], false, rightHarvester, leftHarvester, trotx(270,'deg'));
+    % Step 7: Rotate back +180 degrees to face the next tomato.
+    nextTomatoPos = tomatoTreePos(min(i+1, size(tomatoTreePos, 1)), :) + [0, -gripperLength, gripperHeight];
+    RobotControl.MoveRobot(harvesterBot, nextTomatoPos, steps, [], [], false, rightHarvester, leftHarvester, pointForwards);
 end
+
+%% Testing Sorting Bot Movements with Tomatoes
+% Number of steps for smoother movement.
+steps = 75;
+
+% Orientation for the end-effector remains downwards throughout.
+pointDown = trotx(180, 'deg');
+
+% Gripper length offset.
+gripperLength = 0.24;
+
+% Loop through each item in the unsorted box for visualization.
+for i = 1:size(boxPos, 1)
+    % Define positions for this loop.
+    % Adjust the starting position to pick from the unsorted box.
+    startPos = boxPos(i, :) + [0, 0, gripperLength + 0.1]; % Hover above the item.
+    pickupItem = boxPos(i, :) + [0, 0, gripperLength]; % Lower to the item's position.
+    
+    % Define the target position in the sorted box area.
+    dropOffPos = OKPos(min(i, size(OKPos, 1)), :) + [0, 0, gripperLength + 0.1]; % Hover above the OK box.
+    finalPos = OKPos(min(i, size(OKPos, 1)), :) + [0, 0, gripperLength]; % Lower position for dropping.
+
+    % Step 1: Move to hover above the unsorted item.
+    RobotControl.MoveRobot(sortingBot, startPos, steps, [], [], false, rightSorter, leftSorter, pointDown);
+
+    % Step 2: Lower to the item position (simulate pickup).
+    RobotControl.MoveRobot(sortingBot, pickupItem, steps, tomatoObject{i}, tomatoVertices{i}, false, rightSorter, leftSorter, pointDown);
+    RobotControl.GripperMove(rightSorter, leftSorter, 'close'); % Simulate gripping.
+
+    % Step 3: Move back up after gripping.
+    RobotControl.MoveRobot(sortingBot, startPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointDown);
+
+    % Step 4: Move to hover above the target drop-off position.
+    RobotControl.MoveRobot(sortingBot, dropOffPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointDown);
+
+    % Step 5: Lower to the drop-off position.
+    RobotControl.MoveRobot(sortingBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointDown);
+
+    % Step 6: Release the object.
+    RobotControl.GripperMove(rightSorter, leftSorter, 'open');
+    ObjectClass.DropObject(sortingBot, tomatoObject{i}, tomatoVertices{i}, tableZ+0.06); % Adjust the object's position in the environment.
+
+    % Step 7: Move back up to a safe hover position after releasing the object.
+    RobotControl.MoveRobot(sortingBot, dropOffPos, steps, [], [], false, rightSorter, leftSorter, pointDown);
+
+    % Step 8: Move to the next item in the unsorted box.
+    nextItemPos = boxPos(min(i + 1, size(boxPos, 1)), :) + [0, 0, gripperLength + 0.1]; % Hover above the next item.
+    RobotControl.MoveRobot(sortingBot, nextItemPos, steps, [], [], false, rightSorter, leftSorter, pointDown);
+end
+
+

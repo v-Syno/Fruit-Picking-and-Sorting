@@ -41,8 +41,13 @@ classdef RobotClass
             qGoal = qMatrix(end, :);
         end
 
-        function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject,g1,g2,EEDir)
+        function qGoal = MoveRobot(robot, waypoints, steps, payload, vertices, holdingObject,g1,g2,EEDir)
 
+            % Initialise classes
+            collision = CollisionClass();
+            for i = 1:length(waypoints)
+                pose = waypoints{i};
+            
             % Get pose with desired EE
             T_EE = transl(pose) * EEDir;
 
@@ -58,9 +63,9 @@ classdef RobotClass
             qMatrix = jtraj(q0, qGoal, steps);
 
             % Iterate through the trajectory steps.
-            for j = 1:steps
+            for i = 1:steps
 
-                qCurrent = qMatrix(j, :);   
+                qCurrent = qMatrix(i, :);   
 
                 % Animate the robot.
                 robot.model.animate(qCurrent);
@@ -96,6 +101,7 @@ classdef RobotClass
                 drawnow();
             end
         end
+
 
     end
 end
