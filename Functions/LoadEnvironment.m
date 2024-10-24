@@ -1,10 +1,5 @@
 function LoadEnvironment
-
-    %% Variables
-    
-    tableX = 0.5;
-    tableY = -0.95;
-
+   
     %% Essentials
     floor = imread ('grass.jpg'); % Floor Image
     soil = imread ('soil.jpg'); % Soil Image
@@ -26,7 +21,7 @@ function LoadEnvironment
 
     %% Crates
     crate = 'crate.ply';
-    ObjectClass.PlaceObjects2(crate, [0,-0.2,0.45], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
+    ObjectClass.PlaceObjects2(crate, [0,-0.2,0.45], 'Scale', [0.6,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
 
     ObjectClass.PlaceObjects2(crate, [0.5,-1.75,0.45], 'Scale', [0.6,0.5,0.5]); % good crate
     ObjectClass.PlaceObjects2(crate, [1,-1.25,0.06], 'Scale', [0.5,0.5,0.5],'Rotate',[0,0,pi/2]); % bin
@@ -45,24 +40,33 @@ function LoadEnvironment
     %% Safety Features
     
     % Guard rails to secure the zone from external hazards
-    barrier = 'barrier.ply';
-    ObjectClass.PlaceObjects2(barrier, [1.2,-1.5,0], 'Scale', [1, 1, 0.5]);
-    ObjectClass.PlaceObjects2(barrier, [-0.3,-1.5,0], 'Scale', [1, 1, 0.5]);
-    ObjectClass.PlaceObjects2(barrier, [-1.8,-1.5,0], 'Scale', [1, 1, 0.5]);
+    barrier = 'fence.ply';
+    ObjectClass.PlaceObjects2(barrier, [-2.25,1.75,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,-pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [-2.25,0.25,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,-pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [-2.25,-1,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,-pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [-0.7,-1,0], 'Scale', [0.3, 1, 0.3]);
+    ObjectClass.PlaceObjects2(barrier, [-0,-1,0], 'Scale', [0.3, 1, 0.3]);
+    ObjectClass.PlaceObjects2(barrier, [-0,-1,0], 'Scale', [0.1, 1, 0.3],'Rotate',[0,0,pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [1.5,-1.5,0], 'Scale', [0.3, 1, 0.3]);
+    ObjectClass.PlaceObjects2(barrier, [2.25,-1.5,0], 'Scale', [0.3, 1, 0.3]);
 
-    % hoe = 'hoe.ply';
-    % ObjectClass.PlaceObjects2(hoe, [-1.1,-1.6,0], 'Scale', [0.5, 0.5, 0.5]);
+    ObjectClass.PlaceObjects2(barrier, [2.25,2.5,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [2.25,1,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,pi/2]);
+    ObjectClass.PlaceObjects2(barrier, [2.25,-0.05,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,pi/2]);
+
+    hoe = 'hoe.ply';
+    ObjectClass.PlaceObjects2(hoe, [2.3,-1.53,0], 'Scale', [0.5, 1, 0.5]);
     
     % warning signs
     sign1 = imread('sign1.png'); % robot sign
     sign2 = imread('sign2.png'); % PPE sign
     
-    surf([0.7, 1.7; 0.7, 1.7], [-1.51, -1.51; -1.51, -1.51], [0.5, 0.5; 0.1, 0.1], 'CData', sign1, 'FaceColor', 'texturemap'); % Robot sign protection
-    surf([-0.75, 0.25; -0.75, 0.25], [-1.51, -1.51; -1.51, -1.51], [0.5, 0.5; 0.1, 0.1], 'CData', sign2, 'FaceColor', 'texturemap'); % PPE sign protection
+    surf([-2.2, -1.2; -2.2, -1.2], [-1.03, -1.03; -1.03, -1.03], [0.4, 0.4; 0.05, 0.05], 'CData', sign1, 'FaceColor', 'texturemap'); % Robot sign protection
+    surf([-1.15, -0.15; -1.15, -0.15], [-1.03, -1.03; -1.03, -1.03], [0.4, 0.4; 0.05, 0.05], 'CData', sign2, 'FaceColor', 'texturemap'); % PPE sign protection
     
     % Estop
     estop = 'estop.ply';
-    ObjectClass.PlaceObjects2(estop, [tableX-0.4,tableY-0.15,0.5], 'Scale', [0.5,0.5,0.5]);
+    ObjectClass.PlaceObjects2(estop, [0.2,-2,0.4], 'Scale', [0.5,0.5,0.5]);
     
     %% Light curtains
 
