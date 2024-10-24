@@ -21,10 +21,10 @@ function LoadEnvironment
 
     %% Crates
     crate = 'crate.ply';
-    ObjectClass.PlaceObjects2(crate, [0,-0.2,0.45], 'Scale', [0.6,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
+    ObjectClass.PlaceObjects2(crate, [0,-0.2,0.45], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
 
-    ObjectClass.PlaceObjects2(crate, [0.5,-1.75,0.45], 'Scale', [0.6,0.5,0.5]); % good crate
-    ObjectClass.PlaceObjects2(crate, [1,-1.25,0.06], 'Scale', [0.5,0.5,0.5],'Rotate',[0,0,pi/2]); % bin
+    ObjectClass.PlaceObjects2(crate, [0.6,-1.8,0.45], 'Scale', [0.5,0.5,0.5]); % good crate
+    ObjectClass.PlaceObjects2(crate, [1.2,-1.15,0.06], 'Scale', [0.5,0.5,0.5],'Rotate',[0,0,pi/2]); % bin
     
     %% Table
     table = 'table.ply';
@@ -33,9 +33,17 @@ function LoadEnvironment
 
     ObjectClass.PlaceObjects2(table, [0.5,-1.9,0], 'Scale', [0.4,0.4,0.8]); % good
     
-    %% Scarecrow
+    %% garden features
     scarecrow = 'scarecrow.ply';
     ObjectClass.PlaceObjects2(scarecrow, [-1.5,2.1,0], 'Scale', [0.4,0.4,0.4], 'Rotate',[0,0,pi/12]);
+
+    hoe = 'hoe.ply';
+    ObjectClass.PlaceObjects2(hoe, [2.3,-1.53,0], 'Scale', [0.5, 1, 0.5]);
+
+    foilage = 'foilage.ply';
+    ObjectClass.PlaceObjects2(foilage, [1.25,2,0], 'Scale', [0.5, 0.5, 0.2]);
+    ObjectClass.PlaceObjects2(foilage, [-1.25,2,0], 'Scale', [0.5, 0.5, 0.2]);
+    ObjectClass.PlaceObjects2(foilage, [-1.25,0.75,0], 'Scale', [0.3, 0.3, 0.2],'Rotate',[0,0,pi/2]);
     
     %% Safety Features
     
@@ -54,8 +62,6 @@ function LoadEnvironment
     ObjectClass.PlaceObjects2(barrier, [2.25,1,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,pi/2]);
     ObjectClass.PlaceObjects2(barrier, [2.25,-0.05,0], 'Scale', [0.3, 1, 0.3],'Rotate',[0,0,pi/2]);
 
-    hoe = 'hoe.ply';
-    ObjectClass.PlaceObjects2(hoe, [2.3,-1.53,0], 'Scale', [0.5, 1, 0.5]);
     
     % warning signs
     sign1 = imread('sign1.png'); % robot sign

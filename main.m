@@ -49,9 +49,9 @@ steps = 75;
 [harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
 
 % Orientation for the end-effector.
-pointForwards = trotx(270, 'deg');
+pointPosY = trotx(270, 'deg');
 pointDown = trotx(180,'deg');
-pointTowardsBox = trotx(90, 'deg');
+pointNegY = trotx(90, 'deg');
 
 
 %% Testing Harvester Bot Movements with Tomatoes
@@ -65,21 +65,21 @@ for i = 1:size(tomatoTreePos, 1)
     finalPos = unsortedBoxPos(i, :) + [0, 0, 0.2]; % Slightly lower over the box for drop-off.
 
     % Step 1: Move to the position near the tomato (approach).
-    RobotControl.MoveRobot(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, pointForwards);
+    RobotControl.MoveRobot(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
 
     % Step 2: Move directly to the tomato and simulate pickup.
-    RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester, pointForwards);
+    RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester, pointPosY);
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
     % Step 3: Move back slightly after gripping.
     moveBackPos = pickupTomato + [0, -0.05, 0]; % Move back 5 cm along the y-axis.
-    RobotControl.MoveRobot(harvesterBot, moveBackPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointForwards);
+    RobotControl.MoveRobot(harvesterBot, moveBackPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointPosY);
 
     % Step 4: Rotate +180 degrees to align with the box.
-    RobotControl.MoveRobot(harvesterBot, unsortedBoxPosOffset, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointTowardsBox);
+    RobotControl.MoveRobot(harvesterBot, unsortedBoxPosOffset, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointNegY);
 
     % Step 5: Lower down to the box.
-    RobotControl.MoveRobot(harvesterBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointTowardsBox);
+    RobotControl.MoveRobot(harvesterBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointNegY);
 
     % Step 6: Release the object and update the object position.
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'open');
@@ -87,7 +87,7 @@ for i = 1:size(tomatoTreePos, 1)
 
     % Step 7: Rotate back +180 degrees to face the next tomato.
     nextTomatoPos = tomatoTreePos(min(i+1, size(tomatoTreePos, 1)), :) + [0, -gripperLength, gripperHeight];
-    RobotControl.MoveRobot(harvesterBot, nextTomatoPos, steps, [], [], false, rightHarvester, leftHarvester, pointForwards);
+    RobotControl.MoveRobot(harvesterBot, nextTomatoPos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
 end
 
 %% Testing Sorting Bot Movements with Tomatoes

@@ -129,7 +129,6 @@ classdef RobotClass
             end
         end
 
-
         function GripperMove(right, left, state)
             % Controls the opening or closing of the gripper.
             steps = 50; % Number of steps for smoother transition.
