@@ -21,13 +21,18 @@ function [tomatoTreePos,unsortedBoxPos,boxRight,boxLeft] = PlantLocations(tableZ
     %     ];
     
     % Unsorted box 
+    boxY_1 = -0.08;  % row 1
+    boxY_2 = 0.08;   % row 2
+    boxZ = 0.06;
+
     unsortedBoxPos = [
-        0.15, 0.025, 0.01;
-        0, 0.025, 0.01;
-        -0.15, 0.025, 0.01;
-        0.15, 0.18, 0.01;
-        0, 0.18, 0.01;
-        -0.15, 0.18, 0.01;
+        0.15, boxY_1, boxZ;
+        0, boxY_1, boxZ;
+        -0.15, boxY_1, boxZ;
+
+        0.15, boxY_2, boxZ;
+        0, boxY_2, boxZ;
+        -0.15, boxY_2, boxZ;
         ];
     
     % Sorted box positions

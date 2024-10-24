@@ -13,17 +13,19 @@ function LoadEnvironment
     ObjectClass.PlaceObjects2(tree, [-0.7,1.2,0.01], 'Scale', [0.15,0.15,0.25]); % left tree (big)
     ObjectClass.PlaceObjects2(tree, [-0.4,1.2,0.01], 'Scale', [0.1, 0.1,0.2]); % right tree (small)
     ObjectClass.PlaceObjects2(tree, [0.5,1.2,0.01], 'Scale', [0.15,0.15,0.25]); % right tree (big)
-    
-    %% Crates
-    crate = 'crate.ply';
-    ObjectClass.PlaceObjects2(crate, [0,0.1,0.06], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
-    ObjectClass.PlaceObjects2(crate, [0.85,-0.8,0.55], 'Scale', [0.5,0.5,0.5]); % unsorted
-    ObjectClass.PlaceObjects2(crate, [0.45,-0.8,0.55], 'Scale', [0.5,0.5,0.5]); % unsorted
-    
+
     %% Robot platforms
     slab = 'table.ply';
     ObjectClass.PlaceObjects2(slab, [0,0.6,-0.2], 'Scale', [0.6,0.4,0.5]);
     ObjectClass.PlaceObjects2(slab, [0.75,-0.25,-0.2], 'Scale', [0.2,0.2,0.5]);
+
+    ObjectClass.PlaceObjects2(slab, [0,0,-0.2], 'Scale', [0.34,0.35,0.5]); % platform for the objects
+    
+    %% Crates
+    crate = 'crate.ply';
+    ObjectClass.PlaceObjects2(crate, [0,0,0.1], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
+    ObjectClass.PlaceObjects2(crate, [0.85,-0.8,0.55], 'Scale', [0.5,0.5,0.5]); % right crate
+    ObjectClass.PlaceObjects2(crate, [0.45,-0.8,0.55], 'Scale', [0.5,0.5,0.5]); % left crate
     
     %% Table
     table = 'table.ply';

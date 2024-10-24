@@ -17,9 +17,10 @@ RobotControl = RobotClass();
 
 % Initialise global variables
 tableZ = 0.5;
+slabHeight = 0.05;
 gripperLength = 0.24;
 gripperHeight = 0.025;
-steps = 75;
+boxOffsetZ = gripperLength + slabHeight;
 
 % Setup Environment
 LoadEnvironment();
@@ -39,7 +40,10 @@ potatoSize = [0.06,0.11,0.05];
 % use PlaceObjects NOT PlaceObjects2 as thats used for non moving objects
 [tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
 
+
 %% Load Robots
+
+steps = 75;
 
 [harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
 
@@ -95,8 +99,8 @@ for i = 1:size(unsortedBoxPos, 1)
     pickupItem = unsortedBoxPos(i, :) + [0, 0, gripperLength]; % Lower to the item's position.
     
     % Define the target position in the sorted box area.
-    dropOffPos = rightBox(min(i, size(rightBox, 1)), :) + [0, 0, gripperLength + 0.1]; % Hover above the OK box.
-    finalPos = rightBox(min(i, size(rightBox, 1)), :) + [0, 0, gripperLength]; % Lower position for dropping.
+    dropOffPos = leftBox(min(i, size(leftBox, 1)), :) + [0, 0, gripperLength + 0.1]; % Hover above the OK box.
+    finalPos = leftBox(min(i, size(leftBox, 1)), :) + [0, 0, gripperLength]; % Lower position for dropping.
 
     % Step 1: Move to hover above the unsorted item.
     RobotControl.MoveRobot(sortingBot, startPos, steps, [], [], false, rightSorter, leftSorter, pointDown);
