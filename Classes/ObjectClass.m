@@ -78,10 +78,20 @@ classdef ObjectClass
     
         function UpdateObjectPosition(robot, qMatrix, object, vertices)
             % Compute the transformation matrix for the end-effector.
-            transMatrix = robot.model.fkineUTS(qMatrix) * transl(0, 0, 0.2);
+            transMatrix = robot.model.fkineUTS(qMatrix) * transl(0,0,0.2);
             
             % Transform object vertices.
             transformedVertices = [vertices, ones(size(vertices, 1), 1)] * transMatrix';
+            set(object, 'Vertices', transformedVertices(:, 1:3));
+        end
+
+        function DropObject(robot,object,vertices,targetHeight)
+            qCurr = robot.model.getpos();
+            poseCurr = robot.model.fkineUTS(qCurr);
+            poseCurr(3, 4) = targetHeight; % Adjust the Z value to the desired height.
+
+            % Transform object vertices.
+            transformedVertices = [vertices, ones(size(vertices, 1), 1)] * poseCurr';
             set(object, 'Vertices', transformedVertices(:, 1:3));
         end
     
