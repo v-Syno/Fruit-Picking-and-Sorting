@@ -1,10 +1,8 @@
 function [harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots
 
-    robotRaised = 0.05;
-    
     % Initialize robots and their respective collision functions
-    harvesterBot = LinearUR3e(transl(0.4,0.6,robotRaised));
-    sortingBot = Panda(transl(0.75,-0.25,robotRaised) * trotz(pi));
+    harvesterBot = LinearUR3e(transl(0.6,-0.2,0.4) * trotz(pi/2));
+    sortingBot = Panda(transl(0,0.9,0.05) * trotz(pi));
    
     
     rightHarvesterPos = (harvesterBot.model.fkineUTS(harvesterBot.model.getpos()))*transl(0.0127,0,0.0612)*trotx(pi/2)*troty(-pi/2); % Base position right gripper offset from UR3's end effector (0.0127 is the ditance of the grip from the base cebtre and 0.0612 is the depth of the base)
