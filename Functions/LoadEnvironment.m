@@ -8,6 +8,25 @@ function LoadEnvironment
     surf([-2.5, -2.5; 2.5, 2.5], [-2.5, 2.5; -2.5, 2.5], [0.01, 0.01; 0.01, 0.01], 'CData', floor, 'FaceColor', 'texturemap'); % Floor
     surf([-2, -2; 2, 2], [0.05, 2.5; 0.05, 2.5], [0.011, 0.011; 0.011, 0.011], 'CData', soil, 'FaceColor', 'texturemap'); % Soil - veggie patch
     surf([-2.5, 2.5; -2.5, 2.5], [2.5, 2.5; 2.5, 2.5], [2.5, 2.5; 0, 0], 'CData', wall, 'FaceColor', 'texturemap'); % Back wall (y = 2.5)
+    surf([2.5, 2.5; 2.5, 2.5], [-2.5, 2.5; -2.5, 2.5], [2.5, 2.5; 0, 0], 'CData', wall, 'FaceColor', 'texturemap'); % Right wall (x = 2.5)
+
+    %% Lighting
+
+    % Set the lighting type
+    lighting gouraud;
+    
+    % Add a light source from the top-right corner
+    light('Position', [2.5, 2.5, 3], 'Style', 'local', 'Color', [1 1 0.9]); % Slightly yellowish light for a warm feel
+    
+    % Add a light from the bottom-left corner to enhance shadow contrast
+    light('Position', [-2.5, -2.5, 1.5], 'Style', 'local', 'Color', [0.9 0.9 1]); % Slightly bluish light for contrast
+    
+    % Set material properties to reflect the light more vividly
+    material([0.4, 0.6, 0.4]); % Adjust material reflection and shine
+    
+    % Add ambient light to brighten the entire environment
+    light('Color', [0.3 0.3 0.3], 'Style', 'infinite'); % Lighten up dark areas with ambient lighting
+
 
     %% Trees
     tree = 'treeSkinny.ply';
@@ -23,6 +42,7 @@ function LoadEnvironment
 
     ObjectClass.PlaceObjects2(tree, [-0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
     ObjectClass.PlaceObjects2(tree, [0,1.9,0.01], 'Scale', [0.1, 0.1,0.25]);
+    ObjectClass.PlaceObjects2(tree, [0.3,1.6,0.01], 'Scale', [0.1, 0.1,0.25]);
     ObjectClass.PlaceObjects2(tree, [0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
 
     %% Robot platforms

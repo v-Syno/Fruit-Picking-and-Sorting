@@ -12,8 +12,9 @@ hold on
 axis([-2.5, 2.5, -2.5, 2.5, 0.01, 2]);
 
 
-Objects = ObjectClass();
+Object = ObjectClass();
 RobotControl = RobotClass();
+Produce = ProduceClass();
 
 % Initialise global variables
 tableZ = 0.4;
@@ -23,23 +24,25 @@ gripperHeight = 0.025;
 % Setup Environment
 LoadEnvironment();
 
-%% Grow Plants
+%% Generate Produce
 
-% Define objects
-tomato = 'tomato.ply';
-potato = 'potato.ply';
-
-% unsorted box position
+% unsorted box position for EE
 unsortedBoxEEPos = [0, 0, tableZ+0.2]; % box to drop produce
 
-% Sorted box positions
+% Sorted box positions for EE
 goodBoxEEPose = [0.6, -1.75, tableZ+0.2];
 badBoxEEPose = [0, 0, tableZ+0.2];
 
-[tomatoTreePos, unsortedBox, goodBox, badBox] = ProduceLocations();
+% locations for fruit to be placed when dropped
+[unsortedBox,goodBox,badBox] = Produce.BoxLocations();
 
-% use PlaceObjects NOT PlaceObjects2 as thats used for non-moving objects
-[tomatoObject, tomatoVertices] = Objects.PlaceObjects(tomato, tomatoTreePos);
+% Generate Produce
+[tomatoTreePos,tomatoObject,tomatoVertices] = Produce.GenerateTomatoes();
+
+[potatoGroundPos,potatoObject,potatoVertices] = Produce.GeneratePotatoes();
+
+% testing unsortedBox
+% [testObject, testVert] = Object.PlaceObjects(potato, unsortedBox);
 
 
 %% Load Robots
@@ -52,6 +55,7 @@ steps = 50;
 pointPosY = trotx(270, 'deg');
 pointDown = trotx(180,'deg');
 pointNegY = trotx(90, 'deg');
+pointNegX = trot
 
 
 %% Testing Harvester Bot Movements with Tomatoes
@@ -59,7 +63,7 @@ pointNegY = trotx(90, 'deg');
 % Loop through each tomato
 for i = 1:size(tomatoTreePos, 1)
     % Define positions for this loop.
-    
+    idlePos = [0,1.25,0.6];
     startPos = tomatoTreePos(i, :) + [0, -0.3, 0.1]; % Slight offset to approach the tomato.
     pickupTomato = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight]; % Position to pick up the tomato.
     unsortedBoxPosOffset = unsortedBoxEEPos + [0, 0, 0.5]; % Hover position above the box.
@@ -91,17 +95,20 @@ for i = 1:size(tomatoTreePos, 1)
     RobotControl.MoveRobot(harvesterBot, finalPosAdjust, steps, [], [], false, rightHarvester, leftHarvester, pointNegY);
 end
 
+RobotControl.MoveRobot(harvesterBot, idlePos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
+
 %% Testing Sorting Bot Movements with Tomatoes
 
 % Loop through each item in the unsorted box for visualization.
 for i = 1:size(unsortedBox, 1)
-
-    % Adjust the starting position to pick from the unsorted box.
+    % Define positions for this loop.
     startPos = unsortedBox(i, :) + [0, 0, gripperLength + 0.1]; % Hover above the item.
     pickupItem = unsortedBox(i, :) + [0, 0, gripperLength]; % Lower to the item's position.
-    
+    liftHeight = 0.8;
+    hoverPos = pickupItem + [0, 0, liftHeight]; % Lift position after pickup.
+
     % Use `goodBoxEEPose` as the reference hover position for the good box.
-    dropOffPos = goodBoxEEPose + [0, 0, 0.1]; % Hover above the good box.
+    dropOffPos = goodBoxEEPose + [0, 0, 0.3]; % Hover above the good box.
     finalPos = goodBoxEEPose; % Final position for dropping the object.
 
     % Step 1: Move to hover above the unsorted item.
@@ -111,22 +118,24 @@ for i = 1:size(unsortedBox, 1)
     RobotControl.MoveRobot(sortingBot, pickupItem, steps, tomatoObject{i}, tomatoVertices{i}, false, rightSorter, leftSorter, pointDown);
     RobotControl.GripperMove(rightSorter, leftSorter, 'close'); % Simulate gripping.
 
-    % Step 3: Move back up after gripping.
-    hoverPos = pickupItem + [0,0,0.3];
+    % Step 3: Move back up to hover position after gripping.
     RobotControl.MoveRobot(sortingBot, hoverPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointDown);
 
-    % Step 4: Move to hover above the target drop-off position.
+    % Step 4: Rotate the EE to face the negative X direction for smoother movement.
+    % Adjust to face the negative X direction while hovering.
+    RobotControl.MoveRobot(sortingBot, hoverPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, trotx(180, 'deg'));
+
+    % Step 5: Move to hover above the target drop-off position.
     RobotControl.MoveRobot(sortingBot, dropOffPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointNegY);
 
-    % Step 5: Lower to the drop-off position.
+    % Step 6: Lower to the drop-off position.
     RobotControl.MoveRobot(sortingBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointNegY);
 
-    % Step 6: Release the object.
+    % Step 7: Release the object.
     RobotControl.GripperMove(rightSorter, leftSorter, 'open');
-    ObjectClass.DropObject(sortingBot, tomatoObject{i}, tomatoVertices{i}, goodBox(i,:)); % Adjust the object's position in the environment.
+    ObjectClass.DropObject(sortingBot, tomatoObject{i}, tomatoVertices{i}, goodBox(i, :));
 
-    % Step 7: Move back up to a safe hover position after releasing the object.
-    RobotControl.MoveRobot(sortingBot, dropOffPos + [0,0,0.5], steps, [], [], false, rightSorter, leftSorter, pointDown);
-
+    % Step 8: Move back up to a safe hover position after releasing the object.
+    RobotControl.MoveRobot(sortingBot, dropOffPos + [0, 0, 0.5], steps, [], [], false, rightSorter, leftSorter, pointNegY);
 end
 

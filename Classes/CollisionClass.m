@@ -12,8 +12,6 @@ classdef CollisionClass
     
     methods
         function self = CollisionClass()
-            % Constructor for CollisionClass.
-            % It can initialize any required parameters or properties.
         end
 
         function visualiseEllips(self, robot, dur)
