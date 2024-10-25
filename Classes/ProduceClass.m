@@ -31,8 +31,13 @@ classdef ProduceClass
 
         function [tomatoTreePos,tomatoObject,tomatoVertices] = GenerateTomatoes()
             tomato = 'tomato.ply';
-
             Object = ObjectClass();
+
+            % Check if existing tomato objects are present and delete them.
+            existingTomatoes = findobj('Tag', 'TomatoObject');
+            if ~isempty(existingTomatoes)
+                delete(existingTomatoes);
+            end
         
             % Tomatoes on trees
             tomatoTreePos = [
@@ -43,28 +48,43 @@ classdef ProduceClass
                 0.7,1.4,0.5;
                 ];
 
-        [tomatoObject, tomatoVertices] = Object.PlaceObjects(tomato, tomatoTreePos);
+            [tomatoObject, tomatoVertices] = Object.PlaceObjects(tomato, tomatoTreePos);
+
+            % Tag each potato object for easy identification and future deletion.
+            for i = 1:length(tomatoObject)
+                set(tomatoObject{i}, 'Tag', 'TotatoObject');
+            end
 
         end
 
-        function [potatoGroundPos,potatoObject,potatoVertices] = GeneratePotatoes()
+        function [potatoGroundPos, potatoObject, potatoVertices] = GeneratePotatoes()
             potato = 'potato.ply';
-
             Object = ObjectClass();
         
-            % Tomatoes on trees
+            % Check if existing potato objects are present and delete them.
+            existingPotatoes = findobj('Tag', 'PotatoObject');
+            if ~isempty(existingPotatoes)
+                delete(existingPotatoes);
+            end
+        
+            % Define positions for the new potatoes.
             potatoGroundPos = [
                 -0.7, 1.4, 0.01;
                 % -0.25, 1.4, 0.01;
-                0, 1.83,0.01;
+                0, 1.83, 0.01;
                 % 0.3,1.55,0.01
-                0.7,1.4,0.01;
-                ];
-
-        [potatoObject, potatoVertices] = Object.PlaceObjects(potato, potatoGroundPos);
-
-        end
+                0.7, 1.4, 0.01;
+            ];
         
+            % Generate new potato objects at the specified positions.
+            [potatoObject, potatoVertices] = Object.PlaceObjects(potato, potatoGroundPos);
+        
+            % Tag each potato object for easy identification and future deletion.
+            for i = 1:length(potatoObject)
+                set(potatoObject{i}, 'Tag', 'PotatoObject');
+            end
+        end
+
         function [potatoGroundPos,potatoObject,potatoVertices,tomatoTreePos,tomatoObject,tomatoVertices] = GenerateMix()
             potato = 'potato.ply';
             tomato = 'tomato.ply';

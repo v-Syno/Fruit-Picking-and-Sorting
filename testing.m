@@ -61,7 +61,7 @@ badBoxEEPose = [1.1, -1, 0.6];
 % Loop through each tomato
 for i = 1:size(tomatoTreePos, 1)
     % Define positions for this loop.
-    idlePos = [0,1.25,0.6];
+    idleHarvester = [0,1.25,0.6];
     startPos = tomatoTreePos(i, :) + [0, -0.3, 0.1]; % Slight offset to approach the tomato.
     pickupTomato = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight]; % Position to pick up the tomato.
     unsortedBoxPosOffset = unsortedBoxEEPos + [0, 0, 0.5]; % Hover position above the box.
@@ -91,9 +91,10 @@ for i = 1:size(tomatoTreePos, 1)
     % Step 7: move up and back a bit
     finalPosAdjust = finalPos + [0,0.1,0.2];
     RobotControl.MoveRobot(harvesterBot, finalPosAdjust, steps, [], [], false, rightHarvester, leftHarvester, pointNegY);
+
+    RobotControl.MoveRobot(harvesterBot, idleHarvester, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
 end
 
-RobotControl.MoveRobot(harvesterBot, idlePos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
 
 %% Testing Sorting Bot Movements with Tomatoes
 
@@ -104,8 +105,10 @@ badBoxCount = 0;
 numProduce = size(unsortedBox, 1);
 qualityLabels = Produce.RandomizeQuality(numProduce);
 
-travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.
-fixedXPos = 0.6; % Fixed X position during travel to ensure a more predictable path.
+travelHeight = 0.8; % Set a reasonable height for traveling to avoid joint spasms.
+fixedXPos = 0.25; % Fixed X position during travel to ensure a more predictable path.
+
+idleSorter = [0.25, -0.2, 1.0]; % Idle pose;
 
 % Loop through each item in the unsorted box for visualization.
 for i = 1:size(unsortedBox, 1)
@@ -156,4 +159,7 @@ for i = 1:size(unsortedBox, 1)
 
     % Step 8: Move back up to a safe hover position after releasing the object.
     RobotControl.MoveRobot(sortingBot, finalPos + [0, 0, 0.3], steps, [], [], false, rightSorter, leftSorter, pointDown);
+
+    % Move to idle position after sorting.
+    RobotControl.MoveRobot(sortingBot, idleSorter, steps, [], [], false, rightSorter, leftSorter, pointDown);
 end
