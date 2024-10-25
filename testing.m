@@ -47,10 +47,10 @@ badBoxEEPose = [1.1, -1, 0.6];
 [unsortedBoxMix,unsortedBox,goodBox,badBox] = Produce.BoxLocations();
 
 % Tomatoes
-[tomatoTreePos,tomatoObject,tomatoVertices] = Produce.GenerateTomatoes();
+% [tomatoTreePos,tomatoObject,tomatoVertices] = Produce.GenerateTomatoes();
 
 % Potatoes
-% [potatoGroundPos,potatoObject,potatoVertices] = Produce.GeneratePotatoes();
+[potatoGroundPos,potatoObject,potatoVertices] = Produce.GeneratePotatoes();
 
 % Mix
 % [potatoGroundPos,potatoObject,potatoVertices,tomatoTreePos,tomatoObject,tomatoVertices] = GenerateMix()
@@ -105,7 +105,7 @@ badBoxCount = 0;
 numProduce = size(unsortedBox, 1);
 qualityLabels = Produce.RandomizeQuality(numProduce);
 
-travelHeight = 0.8; % Set a reasonable height for traveling to avoid joint spasms.
+travelHeight = 0.6; % Set a reasonable height for traveling to avoid joint spasms.
 fixedXPos = 0.25; % Fixed X position during travel to ensure a more predictable path.
 
 idleSorter = [0.25, -0.2, 1.0]; % Idle pose;

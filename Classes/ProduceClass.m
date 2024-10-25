@@ -34,7 +34,7 @@ classdef ProduceClass
             Object = ObjectClass();
 
             % Check if existing tomato objects are present and delete them.
-            existingTomatoes = findobj('Tag', 'TomatoObject');
+            existingTomatoes = findobj('Tag', 'Produce');
             if ~isempty(existingTomatoes)
                 delete(existingTomatoes);
             end
@@ -52,7 +52,7 @@ classdef ProduceClass
 
             % Tag each potato object for easy identification and future deletion.
             for i = 1:length(tomatoObject)
-                set(tomatoObject{i}, 'Tag', 'TotatoObject');
+                set(tomatoObject{i}, 'Tag', 'Produce');
             end
 
         end
@@ -61,8 +61,8 @@ classdef ProduceClass
             potato = 'potato.ply';
             Object = ObjectClass();
         
-            % Check if existing potato objects are present and delete them.
-            existingPotatoes = findobj('Tag', 'PotatoObject');
+            % Check if existing objects are present and delete them.
+            existingPotatoes = findobj('Tag', 'Produce');
             if ~isempty(existingPotatoes)
                 delete(existingPotatoes);
             end
@@ -81,7 +81,7 @@ classdef ProduceClass
         
             % Tag each potato object for easy identification and future deletion.
             for i = 1:length(potatoObject)
-                set(potatoObject{i}, 'Tag', 'PotatoObject');
+                set(potatoObject{i}, 'Tag', 'Produce');
             end
         end
 
