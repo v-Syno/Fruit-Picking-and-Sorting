@@ -1,4 +1,4 @@
-function [sortingBot,harvestBot,rightSorter,leftSorter,rightHarvester,leftHarvester] = LoadRobots
+function [harvestBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots
 
     % Initialize robots and their respective collision functions
     sortingBot = LinearUR3e(transl(0.6,-0.2,0.4) * trotz(pi/2));

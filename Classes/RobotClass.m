@@ -51,7 +51,7 @@ classdef RobotClass
         
             % Get initial and goal joint configurations.
             q0 = robot.model.getpos();
-            q0 = AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
+            q0 = RobotClass.AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
             qGoal = robot.model.ikcon(T_EE, q0);
             
             % Generate a smoother joint trajectory using `jtraj`.
@@ -152,6 +152,16 @@ classdef RobotClass
                 right.model.animate(qPath1(i, :));
                 left.model.animate(qPath2(i, :));
                 drawnow();
+            end
+        end
+
+        function qAdjusted = AdjustForSingularities(qCurrent, minBendAngle)
+            qAdjusted = qCurrent;
+            
+            % Adjust the 3rd joint to ensure the elbow maintains a minimum bend.
+            % This is common for robots like UR3e where the third joint represents the elbow.
+            if abs(qCurrent(3)) < deg2rad(minBendAngle)
+                qAdjusted(3) = sign(qCurrent(3)) * deg2rad(minBendAngle);
             end
         end
 

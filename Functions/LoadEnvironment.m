@@ -11,9 +11,19 @@ function LoadEnvironment
 
     %% Trees
     tree = 'treeSkinny.ply';
-    ObjectClass.PlaceObjects2(tree, [-0.7,1.3,0.01], 'Scale', [0.15,0.15,0.25]); % left tree (big)
-    ObjectClass.PlaceObjects2(tree, [-0.4,1.3,0.01], 'Scale', [0.1, 0.1,0.2]); % right tree (small)
-    ObjectClass.PlaceObjects2(tree, [0.5,1.3,0.01], 'Scale', [0.15,0.15,0.25]); % right tree (big)
+
+    % [waymarkX,waymarkY,waymarkZ] = TreePlanning(0,1.15,0.05,1.15,11);
+    % 
+    % trees = [waymarkX;waymarkY;waymarkZ]';
+    % selectedTrees = trees(1:5, :);
+    % 
+    % for i = 1:5
+    %     ObjectClass.PlaceObjects2(tree, [selectedTrees(i, 1), selectedTrees(i, 2), 0.01], 'Scale', [0.15, 0.15, 0.25]);
+    % end
+
+    ObjectClass.PlaceObjects2(tree, [-0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
+    ObjectClass.PlaceObjects2(tree, [0,1.9,0.01], 'Scale', [0.1, 0.1,0.25]);
+    ObjectClass.PlaceObjects2(tree, [0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
 
     %% Robot platforms
     slab = 'table.ply';
@@ -40,10 +50,8 @@ function LoadEnvironment
     hoe = 'hoe.ply';
     ObjectClass.PlaceObjects2(hoe, [2.3,-1.53,0], 'Scale', [0.5, 1, 0.5]);
 
-    foilage = 'foilage.ply';
-    ObjectClass.PlaceObjects2(foilage, [1.25,2,0], 'Scale', [0.5, 0.5, 0.2]);
-    ObjectClass.PlaceObjects2(foilage, [-1.25,2,0], 'Scale', [0.5, 0.5, 0.2]);
-    ObjectClass.PlaceObjects2(foilage, [-1.25,0.75,0], 'Scale', [0.3, 0.3, 0.2],'Rotate',[0,0,pi/2]);
+    foilage1 = 'foilage.ply';
+    ObjectClass.PlaceObjects2(foilage1, [-1.25,2,0], 'Scale', [0.3, 0.3, 0.2],'Rotate',[0,0,pi/2]);
     
     %% Safety Features
     
