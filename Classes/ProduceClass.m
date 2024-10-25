@@ -37,9 +37,9 @@ classdef ProduceClass
             % Tomatoes on trees
             tomatoTreePos = [
                 -0.7, 1.4, 0.35;
-                -0.65, 1.45, 0.5;
+                % -0.65, 1.45, 0.5;
                 0, 1.83,0.4;
-                0.3,1.55,0.45
+                % 0.3,1.55,0.45
                 0.7,1.4,0.5;
                 ];
 
@@ -55,9 +55,9 @@ classdef ProduceClass
             % Tomatoes on trees
             potatoGroundPos = [
                 -0.7, 1.4, 0.01;
-                -0.25, 1.4, 0.01;
+                % -0.25, 1.4, 0.01;
                 0, 1.83,0.01;
-                0.3,1.55,0.01
+                % 0.3,1.55,0.01
                 0.7,1.4,0.01;
                 ];
 
@@ -88,9 +88,16 @@ classdef ProduceClass
         [potatoObject, potatoVertices] = Object.PlaceObjects(potato, potatoGroundPos);
         end
 
-        function [unsortedBox,goodBox,badBox] = BoxLocations()
+        function [unsortedBoxMix,unsortedBox,goodBox,badBox] = BoxLocations()
             % Positions for produce to 'fall' into when dropped into crate
-            unsortedBox = ProduceClass.GeneratePyramid(0,-0.2,0.4);
+            unsortedBoxMix = ProduceClass.GeneratePyramid(0,-0.2,0.43);
+
+            unsortedBox = [
+                -0.038, -0.24, 0.43;
+                -0.038, -0.165, 0.43;
+                0.038, -0.24, 0.43;
+                ];
+
             
             goodBox = [
                 0.7, -1.75, 0.45;
@@ -99,32 +106,27 @@ classdef ProduceClass
                 ];
         
             badBox = [
-                1.25, -1.15, 0.06;
-                1.25, -1.2, 0.06;
-                1.25, -1.25, 0.06;
+                1.1, -1.15, 0.06;
+                1.1, -1.2, 0.06;
+                1.1, -1.25, 0.06;
                 ];
         end
         
-        function boxLabel = AssignBox(goodBoxCount, badBoxCount)
-            % AssignBox randomly assigns an item to the good or bad box.
-            % goodBoxCount: Current number of items in the good box.
-            % badBoxCount: Current number of items in the bad box.
-            % boxLabel: Returns 'good' or 'bad' based on random assignment.
+        function qualityLabels = RandomizeQuality(numProduce)
+            % RandomizeQuality randomly assigns 'good' or 'bad' to a given number of objects.
+            % numTomatoes: Total number of produce to assess.
+            % qualityLabels: A cell array containing 'good' or 'bad' for each produce.
         
-            % Define the maximum capacity of each box.
-            maxItems = 3;
+            % Initialize the output as a cell array.
+            qualityLabels = cell(1, numProduce);
         
-            % Check if either box is full.
-            if goodBoxCount >= maxItems
-                boxLabel = 'bad'; % If the good box is full, assign to the bad box.
-            elseif badBoxCount >= maxItems
-                boxLabel = 'good'; % If the bad box is full, assign to the good box.
-            else
-                % Randomly assign to either 'good' or 'bad' if both boxes have space.
+            % Iterate through each tomato.
+            for i = 1:numProduce
+                % Randomly assign 'good' or 'bad' to each tomato with a 50% chance.
                 if rand() > 0.5
-                    boxLabel = 'good';
+                    qualityLabels{i} = 'good';
                 else
-                    boxLabel = 'bad';
+                    qualityLabels{i} = 'bad';
                 end
             end
         end

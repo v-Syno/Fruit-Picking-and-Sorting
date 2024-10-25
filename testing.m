@@ -16,51 +16,56 @@ Object = ObjectClass();
 RobotControl = RobotClass();
 Produce = ProduceClass();
 
-% Initialise global variables
-tableZ = 0.4;
-gripperLength = 0.24;
-gripperHeight = 0.025;
-
 % Setup Environment
 LoadEnvironment();
 
-%% Generate Produce
-
-% unsorted box position for EE
-unsortedBoxEEPos = [0, 0, tableZ+0.2]; % box to drop produce
-
-% locations for fruit to be placed when dropped
-[unsortedBox,goodBox,badBox] = Produce.BoxLocations();
-
-% Generate Produce
-[tomatoTreePos,tomatoObject,tomatoVertices] = Produce.GenerateTomatoes();
-
-% [potatoGroundPos,potatoObject,potatoVertices] = Produce.GeneratePotatoes();
-
-% testing unsortedBox
-% [testObject, testVert] = Object.PlaceObjects(potato, unsortedBox);
-
-
-%% Load Robots
+% Load Robots
 
 steps = 50;
-
-[harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
+gripperLength = 0.24;
+gripperHeight = 0.025;
 
 % Orientation for the end-effector.
 pointPosY = trotx(270, 'deg');
 pointDown = trotx(180,'deg');
 pointNegY = trotx(90, 'deg');
+pointNegX = trotz(90,'deg');
+pointPosX = trotz(270,'deg');
+
+[harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
+
+%% Generate Produce
+
+% unsorted box position for EE
+unsortedBoxEEPos = [0, 0, 0.6]; % box to drop produce
+
+% Sorted box positions for EE
+goodBoxEEPose = [0.6, -1.75, 0.6];
+badBoxEEPose = [1.1, -1, 0.6];
+
+% locations for fruit to be placed when dropped
+[unsortedBoxMix,unsortedBox,goodBox,badBox] = Produce.BoxLocations();
+
+% Tomatoes
+[tomatoTreePos,tomatoObject,tomatoVertices] = Produce.GenerateTomatoes();
+
+% Potatoes
+% [potatoGroundPos,potatoObject,potatoVertices] = Produce.GeneratePotatoes();
+
+% Mix
+% [potatoGroundPos,potatoObject,potatoVertices,tomatoTreePos,tomatoObject,tomatoVertices] = GenerateMix()
 
 
-%% Loop through each tomato
+%% Testing Harvester Bot Movements with Tomatoes
+
+% Loop through each tomato
 for i = 1:size(tomatoTreePos, 1)
     % Define positions for this loop.
-    idlePos = [0, 1.25, 0.6];
+    idlePos = [0,1.25,0.6];
     startPos = tomatoTreePos(i, :) + [0, -0.3, 0.1]; % Slight offset to approach the tomato.
     pickupTomato = tomatoTreePos(i, :) + [0, -gripperLength, gripperHeight]; % Position to pick up the tomato.
     unsortedBoxPosOffset = unsortedBoxEEPos + [0, 0, 0.5]; % Hover position above the box.
-    finalPos = unsortedBoxEEPos; % Lower over the box for drop-off.
+    finalPos = unsortedBoxEEPos; % lower over the box for drop-off.
 
     % Step 1: Move to the position near the tomato (approach).
     RobotControl.MoveRobot(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
@@ -69,43 +74,86 @@ for i = 1:size(tomatoTreePos, 1)
     RobotControl.MoveRobot(harvesterBot, pickupTomato, steps, tomatoObject{i}, tomatoVertices{i}, false, rightHarvester, leftHarvester, pointPosY);
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
-    % Step 3: Lift the EE up after gripping to avoid obstacles.
-    liftedPos = pickupTomato + [0, 0, 0.3]; % Raise by 0.3 meters.
-    RobotControl.MoveRobot(harvesterBot, liftedPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointPosY);
+    % Step 3: Move back slightly after gripping.
+    moveBackPos = pickupTomato + [0, -0.1, 0]; % Move back
+    RobotControl.MoveRobot(harvesterBot, moveBackPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointPosY);
 
-    % Step 4: Ensure the EE stays within a radius of 0.5 from the pickup position.
-    % Adjust the path to follow a circular arc if needed.
-    distanceToCenter = norm(liftedPos(1:2) - tomatoTreePos(i, 1:2));
-    if distanceToCenter > 0.5
-        % Calculate a new intermediate position to maintain the radius.
-        direction = (liftedPos(1:2) - tomatoTreePos(i, 1:2)) / distanceToCenter;
-        constrainedPos = tomatoTreePos(i, 1:2) + 0.5 * direction;
-        constrainedPos = [constrainedPos, liftedPos(3)]; % Keep the Z height from liftedPos.
-        RobotControl.MoveRobot(harvesterBot, constrainedPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointPosY);
-    else
-        constrainedPos = liftedPos;
-    end
-
-    % Step 5: Move to hover position above the unsorted box.
+    % Step 4: Move to hover position above the unsorted box.
     RobotControl.MoveRobot(harvesterBot, unsortedBoxPosOffset, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointNegY);
 
-    % Step 6: Lower down to the box.
+    % Step 5: Lower down to the box.
     RobotControl.MoveRobot(harvesterBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightHarvester, leftHarvester, pointNegY);
 
-    % Step 7: Release the object and update the object position.
+    % Step 6: Release the object and update the object position.
     RobotControl.GripperMove(rightHarvester, leftHarvester, 'open');
-    ObjectClass.DropObject(harvesterBot, tomatoObject{i}, tomatoVertices{i}, unsortedBox(i, :)); % Adjust placement in unsorted box.
+    ObjectClass.DropObject(harvesterBot, tomatoObject{i}, tomatoVertices{i}, unsortedBox(i, :)); % Adjust placement in unsorted box
 
-    % Step 8: Move up and back a bit to avoid collisions.
-    finalPosAdjust = finalPos + [0, 0.1, 0.2]; % Lift up and move slightly back.
+    % Step 7: move up and back a bit
+    finalPosAdjust = finalPos + [0,0.1,0.2];
     RobotControl.MoveRobot(harvesterBot, finalPosAdjust, steps, [], [], false, rightHarvester, leftHarvester, pointNegY);
 end
 
-% Return the harvester bot to an idle position.
 RobotControl.MoveRobot(harvesterBot, idlePos, steps, [], [], false, rightHarvester, leftHarvester, pointPosY);
-
 
 %% Testing Sorting Bot Movements with Tomatoes
 
-SortTomatoes(sortingBot, unsortedBox, goodBox, badBox, tomatoObject, tomatoVertices, rightSorter, leftSorter);
+% Initialize counters for the good and bad boxes.
+goodBoxCount = 0;
+badBoxCount = 0;
 
+numProduce = size(unsortedBox, 1);
+qualityLabels = Produce.RandomizeQuality(numProduce);
+
+travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.
+fixedXPos = 0.6; % Fixed X position during travel to ensure a more predictable path.
+
+% Loop through each item in the unsorted box for visualization.
+for i = 1:size(unsortedBox, 1)
+    % Define positions for this loop.
+    startPos = unsortedBox(i, :) + [0, 0, gripperLength + 0.5]; % Hover above the item.
+    pickupItem = unsortedBox(i, :) + [0, 0, gripperLength]; % Lower to the item's position.
+    hoverPos = [fixedXPos, pickupItem(2), travelHeight]; % Hover position after pickup at fixed X.
+
+    % Determine the target box and EE pose based on the quality.
+    if strcmp(qualityLabels{i}, 'good')
+        targetBox = goodBox(min(goodBoxCount + 1, size(goodBox, 1)), :);
+        targetEEPose = goodBoxEEPose;
+        targetOrientation = pointNegY; % Point towards negative Y for the good box.
+        goodBoxCount = goodBoxCount + 1;
+    else
+        targetBox = badBox(min(badBoxCount + 1, size(badBox, 1)), :);
+        targetEEPose = badBoxEEPose;
+        targetOrientation = trotx(90, 'deg'); % Point towards positive X for the bad box.
+        badBoxCount = badBoxCount + 1;
+    end
+
+    % Define the drop-off positions for the selected box.
+    dropOffPos = [fixedXPos, targetEEPose(2), travelHeight]; % Travel position at fixed X and height.
+    finalPos = targetEEPose; % Hover position for the EE over the drop-off point.
+
+    % Step 1: Move to hover above the unsorted item.
+    RobotControl.MoveRobot(sortingBot, startPos, steps, [], [], false, rightSorter, leftSorter, pointDown);
+
+    % Step 2: Lower to the item position (simulate pickup).
+    RobotControl.MoveRobot(sortingBot, pickupItem, steps, tomatoObject{i}, tomatoVertices{i}, false, rightSorter, leftSorter, pointDown);
+    RobotControl.GripperMove(rightSorter, leftSorter, 'close'); % Simulate gripping.
+
+    % Step 3: Move back up to the hover position at travel height.
+    RobotControl.MoveRobot(sortingBot, hoverPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, pointDown);
+
+    % Step 4: Move in a straight line to the drop-off position.
+    % Maintain the same X position and height to avoid unnecessary rotations.
+    RobotControl.MoveRobot(sortingBot, dropOffPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, targetOrientation);
+
+    % Step 5: Move to the final EE position above the target box.
+    RobotControl.MoveRobot(sortingBot, finalPos, steps, tomatoObject{i}, tomatoVertices{i}, true, rightSorter, leftSorter, targetOrientation);
+
+    % Step 6: Release the object.
+    RobotControl.GripperMove(rightSorter, leftSorter, 'open');
+    
+    % Step 7: Use the DropObject function to place the tomato in the correct position.
+    ObjectClass.DropObject(sortingBot, tomatoObject{i}, tomatoVertices{i}, targetBox);
+
+    % Step 8: Move back up to a safe hover position after releasing the object.
+    RobotControl.MoveRobot(sortingBot, finalPos + [0, 0, 0.3], steps, [], [], false, rightSorter, leftSorter, pointDown);
+end

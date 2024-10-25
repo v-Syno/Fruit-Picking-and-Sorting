@@ -54,7 +54,7 @@ function LoadEnvironment
     ObjectClass.PlaceObjects2(crate, [0,-0.2,0.45], 'Scale', [0.5,1,0.5], 'Rotate', [0, 0, pi/2]); % unsorted
 
     ObjectClass.PlaceObjects2(crate, [0.6,-1.8,0.45], 'Scale', [0.5,0.5,0.5]); % good crate
-    ObjectClass.PlaceObjects2(crate, [1.2,-1.15,0.06], 'Scale', [0.5,0.5,0.5],'Rotate',[0,0,pi/2]); % bin
+    ObjectClass.PlaceObjects2(crate, [1.1,-1.15,0.06], 'Scale', [0.5,0.5,0.5],'Rotate',[0,0,pi/2]); % bin
     
     %% Table
     table = 'table.ply';
