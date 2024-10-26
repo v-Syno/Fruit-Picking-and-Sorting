@@ -27,9 +27,6 @@ pointBackwards = trotx(90, 'deg');
 [harvesterBot,sortingBot,rightHarvester,leftHarvester,rightSorter,leftSorter] = LoadRobots();
 
 %% Generate Produce
-producePositions = []; % Initialize empty array for positions
-produceTags = {};      % Initialize empty cell array for tags
-
 % unsorted box position for EE
 unsortedBoxEEPos = [0, 0, 0.6]; % box to drop produce
 
@@ -41,13 +38,13 @@ badBoxEEPose = [1.1, -1, 0.6];
 [unsortedBoxMix,unsortedBox,goodBox,badBox] = ProduceClass.BoxLocations();
 
 % Tomatoes
-% [producePositions,tomatoObject,tomatoVertices,produceTags] = Produce.GenerateTomatoes();
+[producePositions,tomatoObject,tomatoVertices,produceTags] = ProduceClass.GenerateTomatoes();
 
 % Potatoes
-[producePositions,potatoObject,potatoVertices,produceTags] = ProduceClass.GeneratePotatoes();
+% [producePositions,potatoObject,potatoVertices,produceTags] = ProduceClass.GeneratePotatoes();
 
 % Mix
-% [producePositions,potatoObject,potatoVertices,tomatoObject,tomatoVertices,produceTags] = Produce.GenerateMix();
+% [producePositions,potatoObject,potatoVertices,tomatoObject,tomatoVertices,produceTags] = ProduceClass.GenerateMix();
 
 
 %% Testing Harvester Bot

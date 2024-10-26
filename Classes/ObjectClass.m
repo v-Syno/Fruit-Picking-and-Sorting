@@ -71,6 +71,7 @@ classdef ObjectClass
         function [objects, vertices] = PlaceObjects2(objectName, objectLocation, options)
         % Place objects and adjust scaling and rotation
         
+        
             arguments
                 objectName {mustBeText}
                 objectLocation (:,3) double

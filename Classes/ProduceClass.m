@@ -2,13 +2,6 @@ classdef ProduceClass
     %ProduceClass holds all functions related to produce
     %   Detailed explanation goes here
 
-    properties
-        tomatoObject
-        tomatoVertices
-        potatoObject
-        potatoVertices
-    end
-
     methods (Static)
 
         % Generate a 2x2x2 pyramid for the produce to simulate stacking of produce
