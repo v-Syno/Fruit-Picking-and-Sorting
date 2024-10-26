@@ -2,6 +2,13 @@ classdef ProduceClass
     %ProduceClass holds all functions related to produce
     %   Detailed explanation goes here
 
+    properties
+        tomatoObject
+        tomatoVertices
+        potatoObject
+        potatoVertices
+    end
+
     methods (Static)
 
         % Generate a 2x2x2 pyramid for the produce to simulate stacking of produce
@@ -29,51 +36,53 @@ classdef ProduceClass
             ];
         end
 
-        function [tomatoTreePos,tomatoObject,tomatoVertices] = GenerateTomatoes()
+        function [producePositions,tomatoObject,tomatoVertices,produceTags] = GenerateTomatoes()
+            global producePositions produceTags;
             tomato = 'tomato.ply';
             Object = ObjectClass();
 
-            % Check if existing tomato objects are present and delete them.
-            existingTomatoes = findobj('Tag', 'Produce');
-            if ~isempty(existingTomatoes)
-                delete(existingTomatoes);
-            end
+            % Reset arrays for fresh generation
+            producePositions = [];
+            produceTags = {};
+
+            ProduceClass.ClearProduce();
         
             % Tomatoes on trees
             tomatoTreePos = [
                 -0.7, 1.4, 0.35;
-                % -0.65, 1.45, 0.5;
                 0, 1.83,0.4;
                 % 0.3,1.55,0.45
-                0.7,1.4,0.5;
+                0.63,1.43,0.5;
                 ];
 
             [tomatoObject, tomatoVertices] = Object.PlaceObjects(tomato, tomatoTreePos);
 
             % Tag each potato object for easy identification and future deletion.
             for i = 1:length(tomatoObject)
-                set(tomatoObject{i}, 'Tag', 'Produce');
+                set(tomatoObject{i}, 'Tag', 'Tomatoes');
             end
+
+            producePositions = [producePositions; tomatoTreePos]; % Append positions
+            produceTags = [produceTags; repmat({'Tomatoes'}, size(tomatoTreePos, 1), 1)]; % Append 'Tomatoes' tags
 
         end
 
-        function [potatoGroundPos, potatoObject, potatoVertices] = GeneratePotatoes()
+        function [producePositions, potatoObject, potatoVertices,produceTags] = GeneratePotatoes()
+            global producePositions produceTags;
             potato = 'potato.ply';
             Object = ObjectClass();
+
+            % Reset arrays for fresh generation
+            producePositions = [];
+            produceTags = {};
         
-            % Check if existing objects are present and delete them.
-            existingPotatoes = findobj('Tag', 'Produce');
-            if ~isempty(existingPotatoes)
-                delete(existingPotatoes);
-            end
-        
+            ProduceClass.ClearProduce();
+
             % Define positions for the new potatoes.
             potatoGroundPos = [
-                -0.7, 1.4, 0.01;
-                % -0.25, 1.4, 0.01;
-                0, 1.83, 0.01;
-                % 0.3,1.55,0.01
-                0.7, 1.4, 0.01;
+                -0.7, 0.75, 0.01;
+                -0.3, 1.5, 0.01;
+                0.5,1.25,0.01
             ];
         
             % Generate new potato objects at the specified positions.
@@ -81,31 +90,51 @@ classdef ProduceClass
         
             % Tag each potato object for easy identification and future deletion.
             for i = 1:length(potatoObject)
-                set(potatoObject{i}, 'Tag', 'Produce');
+                set(potatoObject{i}, 'Tag', 'Potatoes');
             end
+            producePositions = [producePositions; potatoGroundPos]; % Append positions
+            produceTags = [produceTags; repmat({'Potatoes'}, size(potatoGroundPos, 1), 1)]; % Append 'Potatoes' tags
         end
 
-        function [potatoGroundPos,potatoObject,potatoVertices,tomatoTreePos,tomatoObject,tomatoVertices] = GenerateMix()
+        function [producePositions,potatoObject,potatoVertices,tomatoObject,tomatoVertices,produceTags] = GenerateMix()
+            global producePositions produceTags;
             potato = 'potato.ply';
             tomato = 'tomato.ply';
 
+            % Reset arrays for fresh generation
+            producePositions = [];
+            produceTags = {};
+
             Object = ObjectClass();
 
+            ProduceClass.ClearProduce();
+
             % Tomatoes on trees
-            tomatoTreePos = [
-                -0.7, 1.4, 0.35;
-                0, 1.83,0.4;
-                0.7,1.4,0.5;
-                ];
-        
-            % Tomatoes on trees
-            potatoGroundPos = [
-                -0.7, 1.4, 0.01;
-                -0.25, 1.4, 0.01;
+            mixedPos = [
+                -0.7, 1.4, 0.35;    % tomato
+                 0, 1.83, 0.4;      % tomato
+                0.7, 1.4 ,0.5;      % tomato
+                -0.7, 1.4, 0.01;    % potato
+                -0.25, 1.4, 0.01;   % potato
                 ];
 
-        [tomatoObject, tomatoVertices] = Object.PlaceObjects(tomato, tomatoTreePos);
-        [potatoObject, potatoVertices] = Object.PlaceObjects(potato, potatoGroundPos);
+            [tomatoObject, tomatoVertices] = Object.PlaceObjects(tomato, mixedPos(1:3,:));
+            [potatoObject, potatoVertices] = Object.PlaceObjects(potato, mixedPos(4:5,:));
+
+            % Tag each potato object for easy identification and future deletion.
+            for i = 1:length(tomatoObject)
+                set(tomatoObject{i}, 'Tag', 'Tomatoes');
+            end
+
+            % Tag each potato object for easy identification and future deletion.
+            for i = 1:length(potatoObject)
+                set(potatoObject{i}, 'Tag', 'Potatoes');
+            end
+
+            mixedTags = {'Tomatoes'; 'Tomatoes'; 'Tomatoes'; 'Potatoes'; 'Potatoes'}; % Matching tags
+    
+            producePositions = [producePositions; mixedPos]; % Append positions
+            produceTags = [produceTags; mixedTags]; % Append mixed tags
         end
 
         function [unsortedBoxMix,unsortedBox,goodBox,badBox] = BoxLocations()
@@ -149,6 +178,11 @@ classdef ProduceClass
                     qualityLabels{i} = 'bad';
                 end
             end
+        end
+
+        function ClearProduce()
+            delete(findobj('Tag', 'Tomatoes'));
+            delete(findobj('Tag', 'Potatoes'));
         end
 
     end

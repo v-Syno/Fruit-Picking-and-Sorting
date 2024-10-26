@@ -36,6 +36,9 @@ pointPosX = trotz(270,'deg');
 
 %% Generate Produce
 
+producePositions = []; % Initialize empty array for positions
+produceTags = {};      % Initialize empty cell array for tags
+
 % unsorted box position for EE
 unsortedBoxEEPos = [0, 0, 0.6]; % box to drop produce
 

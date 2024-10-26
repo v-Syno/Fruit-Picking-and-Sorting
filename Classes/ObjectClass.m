@@ -6,7 +6,7 @@ classdef ObjectClass
 
     methods (Static)
 
-        function [sizeX, sizeY, sizeZ] = getObjectSize(plyFile)
+        function [sizeX, sizeY, sizeZ] = GetObjectSize(plyFile)
             % getObjectSize Reads a PLY file and calculates the object's dimensions.
             %
             %   [sizeX, sizeY, sizeZ] = getObjectSize('filename.ply') reads the PLY file,

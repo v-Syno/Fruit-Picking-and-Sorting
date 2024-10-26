@@ -30,20 +30,10 @@ function LoadEnvironment
 
     %% Trees
     tree = 'treeSkinny.ply';
-
-    % [waymarkX,waymarkY,waymarkZ] = TreePlanning(0,1.15,0.05,1.15,11);
-    % 
-    % trees = [waymarkX;waymarkY;waymarkZ]';
-    % selectedTrees = trees(1:5, :);
-    % 
-    % for i = 1:5
-    %     ObjectClass.PlaceObjects2(tree, [selectedTrees(i, 1), selectedTrees(i, 2), 0.01], 'Scale', [0.15, 0.15, 0.25]);
-    % end
-
     ObjectClass.PlaceObjects2(tree, [-0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
     ObjectClass.PlaceObjects2(tree, [0,1.9,0.01], 'Scale', [0.1, 0.1,0.25]);
     ObjectClass.PlaceObjects2(tree, [0.3,1.6,0.01], 'Scale', [0.1, 0.1,0.25]);
-    ObjectClass.PlaceObjects2(tree, [0.75,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
+    ObjectClass.PlaceObjects2(tree, [0.68,1.5,0.01], 'Scale', [0.15,0.15,0.25]);
 
     %% Robot platforms
     slab = 'table.ply';
