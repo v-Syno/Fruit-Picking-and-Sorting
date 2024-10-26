@@ -51,7 +51,7 @@ classdef RobotClass
         
             % Get initial and goal joint configurations.
             q0 = robot.model.getpos();
-            q0 = AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
+            q0 = RobotClass.AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
             qGoal = robot.model.ikcon(T_EE, q0);
             
             % Generate a smoother joint trajectory using `jtraj`.
@@ -65,70 +65,11 @@ classdef RobotClass
                 % Animate the robot.
                 robot.model.animate(qCurrent);
 
-                UpdateGripperAndObject(robot, g1, g2, qCurrent, payload, vertices, holdingObject);
+                RobotClass.UpdateGripperAndObject(robot, g1, g2, qCurrent, payload, vertices, holdingObject);
 
                 drawnow();
             end
         end
-
-        function qGoals = DualRobot(robots, poses, steps, payloads, vertices, holdingObject, grippers, EEDir)
-            % robots: Cell array of robots (e.g., {robot1, robot2})
-            % poses: Cell array of desired end-effector positions (e.g., {[x1, y1, z1], [x2, y2, z2]})
-            % steps: Number of steps for the trajectory.
-            % payloads: Cell array of payloads (e.g., {payload1, payload2}).
-            % vertices: Cell array of object vertices (e.g., {vertices1, vertices2}).
-            % holdingObject: Array of logicals indicating if each robot is holding an object.
-            % grippers: Cell array of grippers (e.g., {{g1, g2}, {g3, g4}}).
-            % EEDir: Cell array of end-effector orientations (e.g., {EEDir1, EEDir2}).
-        
-            % Initialize object class for updating positions.
-            object = ObjectClass();
-        
-            % Number of robots.
-            numRobots = length(robots);
-            qGoals = cell(1, numRobots);
-            qMatrices = cell(1, numRobots);
-        
-            % Compute goal configurations and trajectories for each robot.
-            for r = 1:numRobots
-                robot = robots{r};
-                T_EE = transl(poses{r}) * EEDir{r};
-                q0 = robot.model.getpos();
-                qGoals{r} = robot.model.ikcon(T_EE, q0);
-                qMatrices{r} = jtraj(q0, qGoals{r}, steps);
-            end
-        
-            % Iterate through the trajectory steps.
-            for i = 1:steps
-                % Loop through each robot to animate and update positions.
-                for r = 1:numRobots
-                    robot = robots{r};
-                    qMatrix = qMatrices{r};
-                    payload = payloads{r};
-                    vert = vertices{r};
-                    isHolding = holdingObject(r);
-                    gripper = grippers{r};
-        
-                    % Animate the robot.
-                    robot.model.animate(qMatrix(i, :));
-        
-                    % Update gripper positions for the robot.
-                    pos1 = robot.model.fkineUTS(qMatrix(i, :)) * transl(0, -0.0127, 0.05) * troty(-pi/2);
-                    pos2 = robot.model.fkineUTS(qMatrix(i, :)) * transl(0, 0.0127, 0.05) * troty(-pi/2);
-                    gripper{1}.model.base = pos1;
-                    gripper{2}.model.base = pos2;
-                    gripper{1}.model.animate(gripper{1}.model.getpos());
-                    gripper{2}.model.animate(gripper{2}.model.getpos());
-        
-                    % Update object positions if the robot is holding an object.
-                    if isHolding
-                        object.UpdateObjectPosition(robot, qMatrix(i, :), payload, vert);
-                    end
-                end
-                drawnow();
-            end
-        end
-
 
         function GripperMove(right, left, state)
             % Controls the opening or closing of the gripper.
@@ -154,6 +95,36 @@ classdef RobotClass
                 left.model.animate(qPath2(i, :));
                 drawnow();
             end
+        end
+
+        function qAdjusted = AdjustForSingularities(qCurrent, minBendAngle)
+            qAdjusted = qCurrent;
+            
+            % Adjust the 3rd joint to ensure the elbow maintains a minimum bend.
+            % This is common for robots like UR3e where the third joint represents the elbow.
+            if abs(qCurrent(3)) < deg2rad(minBendAngle)
+                qAdjusted(3) = sign(qCurrent(3)) * deg2rad(minBendAngle);
+            end
+        end
+
+        function UpdateGripperAndObject(robot, g1, g2, qCurrent, payload, vertices, holdingObject)
+        
+            object = ObjectClass();
+        
+            % Gripper base transform for UR3.
+            pos1 = robot.model.fkineUTS(robot.model.getpos())*transl(0.0127,0,0.0612)*trotx(pi/2)*trotz(pi/2);%z0.0612
+            pos2 = robot.model.fkineUTS(robot.model.getpos())*transl(-0.0127,0,0.0612)*trotx(pi/2)*trotz(pi/2);%z0.0612
+            
+            g1.model.base = pos1; 
+            g2.model.base = pos2; 
+            g1.model.animate(g1.model.getpos());
+            g2.model.animate(g2.model.getpos());
+            
+            % Update object position if holding.
+            if holdingObject
+                object.UpdateObjectPosition(robot, qCurrent, payload, vertices);
+            end
+        
         end
 
     end
