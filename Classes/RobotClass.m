@@ -19,19 +19,24 @@ classdef RobotClass
             % Generate a smoother joint trajectory using `jtraj`.
             qMatrix = jtraj(q0, qGoal, steps);
 
-            % define joystick and button for E-Stop
-            eStopButtonID = 2;  % Button ID for E-Stop
-
             % Iterate through the trajectory steps.
             % for i = 1:steps
             i = 1;
             while i <= steps
                 % Check E-Stop state
-                if RobotClass.CheckEStop() || EStop.CheckJoystickEStop(eStopButtonID)
-                    disp('Paused due to E-Stop');
-                    while RobotClass.CheckEStop() || EStop.CheckJoystickEStop(eStopButtonID)
-                        pause(0.1); % Maintain pause until E-Stop is deactivated
-                    end
+                % if RobotClass.CheckEStop()
+                %     disp('Paused due to E-Stop');
+                %     while RobotClass.CheckEStop()
+                %         pause(0.1); % Maintain pause until E-Stop is deactivated
+                %     end
+                % end
+
+                % Call the joystick E-Stop check function
+                CheckJoystickEStop();
+
+                if RobotClass.CheckEStop()
+                    pause(0.1); % Maintain pause until E-Stop is toggled off
+                    continue; % Skip movement if E-Stop is active
                 end
 
                 qCurrent = qMatrix(i, :);
