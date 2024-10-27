@@ -1,45 +1,7 @@
-%% RobotClass
 classdef RobotClass
     % Class for Robot functions
 
     methods (Static)
-
-        function qGoal = MoveObject(robot, pose, steps, object, vertices, pickUp)
-            % MoveObject2 Moves a robot to a specified pose
-            % 
-            % Inputs:
-            %   - robot: The robot model.
-            %   - pose: Desired end-effector pose
-            %   - steps: Number of steps for the trajectory.
-            %   - object: The graphical object to update.
-            %   - vertices: Vertices of the object.
-            %   - pickUp: Boolean indicating if the robot is holding the object.
-            %
-            % Outputs:
-            %   - qGoal: Final joint configuration.
-            
-        
-            q0 = robot.model.getpos(); % Get current joint poses
-            T_EE = transl(pose)* trotx(pi); % Using the provided end-effector pose
-            qGoal = robot.model.ikcon(T_EE, q0); % Compute joint configuration for the goal
-        
-            qMatrix = jtraj(q0,qGoal,steps);
-
-            % Execute the motion
-            for i = 1:steps
-                robot.model.animate(qMatrix(i, :));
-        
-                if pickUp
-                    % Update the object's vertices to reflect its transformation
-                    updated_transform = robot.model.fkineUTS(qMatrix(i, :));
-                    updated_vertices = [vertices, ones(size(vertices, 1), 1)] * updated_transform';
-                    set(object, 'Vertices', updated_vertices(:, 1:3));
-                end
-                drawnow();
-            end
-        
-            qGoal = qMatrix(end, :);
-        end
 
         function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject,g1,g2,EEDir)
 
@@ -51,23 +13,43 @@ classdef RobotClass
         
             % Get initial and goal joint configurations.
             q0 = robot.model.getpos();
-            q0 = RobotClass.AdjustForSingularities(q0, minBendAngle); % Adjust initial configuration.
+            q0 = RobotClass.AdjustForSingularities(q0, minBendAngle);
             qGoal = robot.model.ikcon(T_EE, q0);
             
             % Generate a smoother joint trajectory using `jtraj`.
             qMatrix = jtraj(q0, qGoal, steps);
 
             % Iterate through the trajectory steps.
-            for j = 1:steps
+            % for i = 1:steps
+            i = 1;
+            while i <= steps
+                % Check E-Stop state
+                % if RobotClass.CheckEStop()
+                %     disp('Paused due to E-Stop');
+                %     while RobotClass.CheckEStop()
+                %         pause(0.1); % Maintain pause until E-Stop is deactivated
+                %     end
+                % end
 
-                qCurrent = qMatrix(j, :);   
+                % Call the joystick E-Stop check function
+                CheckJoystickEStop();
+
+                if RobotClass.CheckEStop()
+                    pause(0.1); % Maintain pause until E-Stop is toggled off
+                    continue; % Skip movement if E-Stop is active
+                end
+
+                qCurrent = qMatrix(i, :);
+                qCurrentAdjusted = RobotClass.AdjustForSingularities(qCurrent, minBendAngle);
 
                 % Animate the robot.
-                robot.model.animate(qCurrent);
+                robot.model.animate(qCurrentAdjusted);
 
                 RobotClass.UpdateGripperAndObject(robot, g1, g2, qCurrent, payload, vertices, holdingObject);
 
+                i = i + 1;
                 drawnow();
+
             end
         end
 
@@ -125,6 +107,22 @@ classdef RobotClass
                 object.UpdateObjectPosition(robot, qCurrent, payload, vertices);
             end
         
+        end
+
+        function ToggleEStop()
+            % Toggle the E-Stop state using the global function
+            currentState = GlobalEStop();
+            GlobalEStop(~currentState); % Toggle E-Stop state
+            if GlobalEStop()
+                disp('E-Stop Activated');
+            else
+                disp('E-Stop Deactivated, resuming movement...');
+            end
+        end
+        
+        function state = CheckEStop()
+            % Return the current E-Stop state from GlobalEStop
+            state = GlobalEStop();
         end
 
     end
