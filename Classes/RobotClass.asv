@@ -117,7 +117,7 @@ classdef RobotClass
         
         function state = CheckEStop()
             % Return the current E-Stop state from GlobalEStop
-            state = GlobalEStop();
+            state = EStopGlobalEStop();
         end
 
     end

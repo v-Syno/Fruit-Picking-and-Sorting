@@ -1,50 +1,63 @@
 classdef EStop
 
-
-    methods (Static)
-
-        function VirtualEstop()
+    methods(Static)
+        function status = GlobalEStop(flag)
+            % GlobalEStop manages the global E-Stop state
+            % If a flag is provided, it toggles the E-Stop state.
+            % Otherwise, it returns the current state.
+            
+            persistent eStopActive % Persistent variable to hold E-Stop state
+            if isempty(eStopActive)
+                eStopActive = false; % Initialize as false
+            end
+            
+            if nargin > 0
+                % Toggle state if flag is provided
+                eStopActive = flag;
+            end
+            
+            status = eStopActive;
         end
 
-        function PhysicalEstop()
-            % Test for Joystick functionality
-            % run this script to test your joystick button/axis function
-            %
-            % To quit, press ctrl-C
-            %
-            % setup joystick
-            id = 1; % NOTE: may need to change if multiple joysticks present
+        function CheckJoystickEStop(buttonID)
+            % CheckJoystickEStop Toggles the E-Stop state when a specified joystick button is pressed.
+            % Inputs:
+            %   - joyID: Joystick ID number (e.g., 1 for the first joystick).
+            %   - buttonID: The button number to use for the E-Stop toggle (e.g., 2).
             
-            joy = vrjoystick(id);
-            joy_info = caps(joy); % print joystick information
+            % Define the joystick based on the provided ID
+            joy = vrjoystick(1);
             
+            % Define a persistent variable to track the button's pressed state
+            persistent buttonPressed;
             
-            fprintf('Your joystick has:\n');
-            fprintf(' - %i buttons\n',joy_info.Buttons);
-            fprintf(' - %i axes\n', joy_info.Axes);
-            pause(2);
+            if isempty(buttonPressed)
+                buttonPressed = false; % Initialize button state if undefined
+            end
             
-            %
-            while(1)
+            % Read the current button states
+            [~, buttons, ~] = read(joy);
+            
+            % Check if the specified button is pressed and wasn't pressed before
+            if buttons(buttonID) && ~buttonPressed
+                % Toggle the E-Stop state
+                RobotClass.ToggleEStop();
                 
-                % Read joystick buttons
-                [axes, buttons, povs] = read(joy);
-            
-                % Print buttons/axes info to command window
-                str = sprintf('--------------\n');
-                for i = 1:joy_info.Buttons
-                    str = [str sprintf('Button[%i]:%i\n',i,buttons(i))];
-                end
-                for i = 1:joy_info.Axes 
-                    str = [str sprintf('Axes[%i]:%1.3f\n',i,axes(i))]; 
-                end
-                str = [str sprintf('--------------\n')];
-                fprintf('%s',str);
-                pause(0.05);  
+                % Set buttonPressed to true to avoid repeated toggling
+                buttonPressed = true;
                 
+                % Display the E-Stop status
+                if EStop.GlobalEStop()
+                    disp('E-Stop Activated by joystick');
+                else
+                    disp('E-Stop Deactivated by joystick');
+                end
+                
+            % Reset the buttonPressed flag once the button is released
+            elseif ~buttons(buttonID) && buttonPressed
+                buttonPressed = false;
             end
         end
-
 
     end
 end
