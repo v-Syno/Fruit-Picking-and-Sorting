@@ -114,6 +114,12 @@ end
 
 %% Testing Sorting Bot
 
+% Initialize counters for each type of sorted produce.
+goodTomatoes = 0;
+badTomatoes = 0;
+goodPotatoes = 0;
+badPotatoes = 0;
+
 tomatoIndex = 1;
 potatoIndex = 1;
 
@@ -133,14 +139,10 @@ idleSorter = [0.25, -0.2, 1.0]; % Idle pose;
 for i = 1:numProduce
     % Determine the object type for each item and select the correct object and vertices.
     if strcmp(produceTags{i}, 'Tomatoes')
-        % currentObject = tomatoObject{i};
-        % currentVertices = tomatoVertices{i};
         currentObject = tomatoObject{tomatoIndex};
         currentVertices = tomatoVertices{tomatoIndex};
         tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
     elseif strcmp(produceTags{i}, 'Potatoes')
-        % currentObject = potatoObject{i};
-        % currentVertices = potatoVertices{i};
         currentObject = potatoObject{potatoIndex};
         currentVertices = potatoVertices{potatoIndex};
         potatoIndex = potatoIndex + 1;  % Increment potato index only
@@ -157,11 +159,25 @@ for i = 1:numProduce
         targetEEPose = goodBoxEEPose;
         targetOrientation = pointBackwards;
         goodBoxCount = goodBoxCount + 1;
+
+        % Update counters based on produce type.
+        if strcmp(produceTags{i}, 'Tomatoes')
+            goodTomatoes = goodTomatoes + 1;
+        else
+            goodPotatoes = goodPotatoes + 1;
+        end
     else
         targetBox = badBox(min(badBoxCount + 1, size(badBox, 1)), :);
         targetEEPose = badBoxEEPose;
         targetOrientation = pointBackwards;
         badBoxCount = badBoxCount + 1;
+
+        % Update counters based on produce type.
+        if strcmp(produceTags{i}, 'Tomatoes')
+            badTomatoes = badTomatoes + 1;
+        else
+            badPotatoes = badPotatoes + 1;
+        end
     end
 
     % Define the drop-off positions for the selected box.
@@ -197,38 +213,8 @@ for i = 1:numProduce
     RobotClass.MoveRobot(sortingBot, idleSorter, steps, [], [], false, rightSorter, leftSorter, pointDown);
 end
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-        function ProduceButtonGroupSelectionChanged(app, event)
-            selectedButton = app.ProduceButtonGroup.SelectedObject.Text;
-
-            switch selectedButton
-                case 'Tomatoes'
-                    [app.producePositions, app.tomatoObject, app.tomatoVertices, app.produceTags] = ProduceClass.GenerateTomatoes();
-                    disp('Generated Tomatoes.');
-                case 'Potatoes'
-                    [app.producePositions, app.tomatoObject, app.potatoVertices, app.produceTags] = ProduceClass.GeneratePotatoes();
-                    disp('Generated Potatoes.');
-                case 'Mixed'
-                    [app.producePositions, app.potatoObject, app.potatoVertices, app.tomatoObject, app.tomatoVertices, app.produceTags] = ProduceClass.GenerateMix();
-                    disp('Generated Mixed Produce.');
-            end   
-        end
-
-        % Callback function: ProduceButtonGroup, RobotActionButtonGroup
-        function ProduceButtonGroupButtonDown(app, event)
-            selectedAction = app.RobotActionButtonGroup.SelectedObject.Text;
-            switch selectedAction
-                case 'Harvest Only'
-                    disp('Harvester Started.');
-                    StartHarvesting(app);
-                case 'Sort Only'
-                    disp('Sorter Started.');
-                    StartSorting(app);
-                case 'Dual Action'
-                    disp('Dual Action Started.');
-                    StartHarvesting(app);
-                    StartSorting(app);
-            end
-        end
+fprintf('\nSorting Summary:\n');
+fprintf('%d good tomatoes\n', goodTomatoes);
+fprintf('%d bad tomatoes\n', badTomatoes);
+fprintf('%d good potatoes\n', goodPotatoes);
+fprintf('%d bad potatoes\n', badPotatoes);

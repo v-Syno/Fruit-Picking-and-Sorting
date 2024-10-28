@@ -176,6 +176,33 @@ classdef ProduceClass
                 end
             end
         end
+        
+        function [qualityLabels, produceTypes] = RandomizeQuality2(numTomatoes, numPotatoes)
+            % Initialize quality labels and produce types
+            qualityLabels = cell(numTomatoes + numPotatoes, 1);
+            produceTypes = cell(numTomatoes + numPotatoes, 1);
+        
+            % Randomly assign 'good' or 'bad' to each tomato
+            for i = 1:numTomatoes
+                if rand() > 0.5
+                    qualityLabels{i} = 'good';
+                else
+                    qualityLabels{i} = 'bad';
+                end
+                produceTypes{i} = 'Tomato';
+            end
+            
+            % Randomly assign 'good' or 'bad' to each potato
+            for j = 1:numPotatoes
+                idx = numTomatoes + j;
+                if rand() > 0.5
+                    qualityLabels{idx} = 'good';
+                else
+                    qualityLabels{idx} = 'bad';
+                end
+                produceTypes{idx} = 'Potato';
+            end
+        end
 
         function ClearProduce()
             delete(findobj('Tag', 'Tomatoes'));

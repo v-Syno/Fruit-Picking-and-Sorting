@@ -1,5 +1,11 @@
 function StartSorting(app)
 
+    % Initialize counters for each type of sorted produce.
+    app.goodTomatoes = 0;
+    app.badTomatoes = 0;
+    app.goodPotatoes = 0;
+    app.badPotatoes = 0;
+
     tomatoIndex = 1;
     potatoIndex = 1;
 
@@ -43,11 +49,25 @@ function StartSorting(app)
             targetEEPose = app.goodBoxEEPose;
             targetOrientation = app.pointBackwards; % Point towards negative Y for the good box.
             goodBoxCount = goodBoxCount + 1;
+
+            % Update counters based on produce type.
+            if strcmp(app.produceTags{i}, 'Tomatoes')
+                app.goodTomatoes = app.goodTomatoes + 1;
+            else
+                app.goodPotatoes = app.goodPotatoes + 1;
+            end
         else
             targetBox = app.badBox(min(badBoxCount + 1, size(app.badBox, 1)), :);
             targetEEPose = app.badBoxEEPose;
             targetOrientation = trotx(90, 'deg'); % Point towards positive X for the bad box.
             badBoxCount = badBoxCount + 1;
+
+            % Update counters based on produce type.
+            if strcmp(app.produceTags{i}, 'Tomatoes')
+                app.badTomatoes = app.badTomatoes + 1;
+            else
+                app.badPotatoes = app.badPotatoes + 1;
+            end
         end
     
         % Define the drop-off positions for the selected box.
@@ -82,5 +102,10 @@ function StartSorting(app)
         % Step 9: Move to idle position after sorting.
         RobotClass.MoveRobot(app.sortingBot, idleSorter, app.steps, [], [], false, app.rightSorter, app.leftSorter, app.pointDown);
     end
+    fprintf('\nSorting Summary:\n');
+    fprintf('%d good tomatoes\n', app.goodTomatoes);
+    fprintf('%d bad tomatoes\n', app.badTomatoes);
+    fprintf('%d good potatoes\n', app.goodPotatoes);
+    fprintf('%d bad potatoes\n', app.badPotatoes);
 
 end
