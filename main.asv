@@ -35,22 +35,19 @@ goodBoxEEPose = [0.6, -1.75, 0.6];
 badBoxEEPose = [1.1, -1, 0.6];
 
 % locations for fruit to be placed when dropped
-[unsortedBox,goodBox,badBox] = ProduceClass.BoxLocations();
+[unsortedBoxMix,unsortedBox,goodBox,badBox] = ProduceClass.BoxLocations();
 
 % Tomatoes
 % [producePositions,tomatoObject,tomatoVertices,produceTags] = ProduceClass.GenerateTomatoes();
 
 % Potatoes
-[producePositions,potatoObject,potatoVertices,produceTags] = ProduceClass.GeneratePotatoes();
+% [producePositions,potatoObject,potatoVertices,produceTags] = ProduceClass.GeneratePotatoes();
 
 % Mix
-% [producePositions,potatoObject,potatoVertices,tomatoObject,tomatoVertices,produceTags] = ProduceClass.GenerateMix();
+[producePositions,potatoObject,potatoVertices,tomatoObject,tomatoVertices,produceTags] = ProduceClass.GenerateMix();
 
 
 %% Testing Harvester Bot
-
-tomatoIndex = 1;
-potatoIndex = 1;
 
 % Loop through each produce position and associated tag.
 for i = 1:size(producePositions, 1)
@@ -58,25 +55,19 @@ for i = 1:size(producePositions, 1)
     if strcmp(produceTags{i}, 'Tomatoes')
         EEDirection = pointForwards;
         pickupOffset = [0, -gripperLength, gripperHeight]; % Offset for tomatoes on the tree.
-        % currentObject = tomatoObject{i};
-        % currentVertices = tomatoVertices{i};
-        currentObject = tomatoObject{tomatoIndex};
-        currentVertices = tomatoVertices{tomatoIndex};
-        tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
+        currentObject = tomatoObject{i};
+        currentVertices = tomatoVertices{i};
     elseif strcmp(produceTags{i}, 'Potatoes')
         EEDirection = pointDown;
         pickupOffset = [0, 0, gripperLength]; % Offset for potatoes on the ground.
-        % currentObject = potatoObject{i};
-        % currentVertices = potatoVertices{i};
-        currentObject = potatoObject{potatoIndex};
-        currentVertices = potatoVertices{potatoIndex};
-        potatoIndex = potatoIndex + 1;  % Increment potato index only
+        currentObject = potatoObject{i}; % Assuming potatoObject and potatoVertices are defined similarly.
+        currentVertices = potatoVertices{i};
     end
 
     idleHarvester = [0,1.25,0.6];
 
     % Define approach and pickup positions based on produce position.
-    startPos = producePositions(i, :) + [0, -0.3, 0.3]; % Approach position.
+    startPos = producePositions(i, :) + [0, -0.3, 0.1]; % Approach position.
     pickupPos = producePositions(i, :) + pickupOffset; % Exact pickup position.
     
     % Define the drop-off positions at the unsorted box.
@@ -114,36 +105,27 @@ end
 
 %% Testing Sorting Bot
 
-tomatoIndex = 1;
-potatoIndex = 1;
-
 % Initialize counters for the good and bad boxes.
 goodBoxCount = 0;
 badBoxCount = 0;
 
-numProduce = size(producePositions, 1);
+numProduce = size(unsortedBoxMix, 1);
 qualityLabels = ProduceClass.RandomizeQuality(numProduce);
 
-travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.
+travelHeight = 0.8; % Set a reasonable height for traveling to avoid joint spasms.
 fixedXPos = 0.25; % Fixed X position during travel to ensure a more predictable path.
 
 idleSorter = [0.25, -0.2, 1.0]; % Idle pose;
 
 % Loop through each item in the unsorted box.
-for i = 1:numProduce
+for i = 1:size(unsortedBox, 1)
     % Determine the object type for each item and select the correct object and vertices.
     if strcmp(produceTags{i}, 'Tomatoes')
-        % currentObject = tomatoObject{i};
-        % currentVertices = tomatoVertices{i};
-        currentObject = tomatoObject{tomatoIndex};
-        currentVertices = tomatoVertices{tomatoIndex};
-        tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
+        currentObject = tomatoObject{i};
+        currentVertices = tomatoVertices{i};
     elseif strcmp(produceTags{i}, 'Potatoes')
-        % currentObject = potatoObject{i};
-        % currentVertices = potatoVertices{i};
-        currentObject = potatoObject{potatoIndex};
-        currentVertices = potatoVertices{potatoIndex};
-        potatoIndex = potatoIndex + 1;  % Increment potato index only
+        currentObject = potatoObject{i};
+        currentVertices = potatoVertices{i};
     end
 
     % Define starting and hover positions above the item in the unsorted box.
@@ -155,12 +137,12 @@ for i = 1:numProduce
     if strcmp(qualityLabels{i}, 'good')
         targetBox = goodBox(min(goodBoxCount + 1, size(goodBox, 1)), :);
         targetEEPose = goodBoxEEPose;
-        targetOrientation = pointBackwards;
+        targetOrientation = pointBackwards; % Point towards negative Y for the good box.
         goodBoxCount = goodBoxCount + 1;
     else
         targetBox = badBox(min(badBoxCount + 1, size(badBox, 1)), :);
         targetEEPose = badBoxEEPose;
-        targetOrientation = pointBackwards;
+        targetOrientation = trotx(90, 'deg'); % Point towards positive X for the bad box.
         badBoxCount = badBoxCount + 1;
     end
 
@@ -191,7 +173,7 @@ for i = 1:numProduce
     ObjectClass.DropObject(sortingBot, currentObject, currentVertices, targetBox);
 
     % Step 8: Move back up to a safe hover position after releasing the object.
-    RobotClass.MoveRobot(sortingBot, finalPos + [0, 0, 0.3], steps, [], [], false, rightSorter, leftSorter, pointBackwards);
+    RobotClass.MoveRobot(sortingBot, finalPos + [0, 0, 0.3], steps, [], [], false, rightSorter, leftSorter, pointForwards);
 
     % Step 9: Move to idle position after sorting.
     RobotClass.MoveRobot(sortingBot, idleSorter, steps, [], [], false, rightSorter, leftSorter, pointDown);
