@@ -5,6 +5,13 @@ classdef RobotClass
 
         function qGoal = MoveRobot(robot, pose, steps, payload, vertices, holdingObject,g1,g2,EEDir)
 
+            joystickConnected = true;
+            try
+                joy = vrjoystick(1);
+            catch
+                joystickConnected = false;  % Set flag if joystick is not available
+            end
+
             % Get pose with desired EE
             T_EE = transl(pose) * EEDir;
 
@@ -32,7 +39,9 @@ classdef RobotClass
                 % end
 
                 % Call the joystick E-Stop check function
-                CheckJoystickEStop();
+                if joystickConnected
+                    CheckJoystickEStop();
+                end
 
                 if RobotClass.CheckEStop()
                     pause(0.1); % Maintain pause until E-Stop is toggled off

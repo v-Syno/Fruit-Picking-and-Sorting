@@ -1,23 +1,31 @@
 function StartHarvesting(app)
+tomatoIndex = 1;
+potatoIndex = 1;
 
     for i = 1:size(app.producePositions, 1)
     % Determine the EE orientation, pickup offset, and current produce object based on produce type.
     if strcmp(app.produceTags{i}, 'Tomatoes')
         EEDirection = app.pointForwards;
         pickupOffset = [0, -app.gripperLength, app.gripperHeight]; % Offset for tomatoes on the tree.
-        currentObject = app.tomatoObject{i};
-        currentVertices = app.tomatoVertices{i};
+        % currentObject = app.tomatoObject{i};
+        % currentVertices = app.tomatoVertices{i};
+        currentObject = app.tomatoObject{tomatoIndex};
+        currentVertices = app.tomatoVertices{tomatoIndex};
+        tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
     elseif strcmp(app.produceTags{i}, 'Potatoes')
         EEDirection = app.pointDown;
         pickupOffset = [0, 0, app.gripperLength]; % Offset for potatoes on the ground.
-        currentObject = app.potatoObject{i};
-        currentVertices = app.potatoVertices{i};
+        % currentObject = app.potatoObject{i};
+        % currentVertices = app.potatoVertices{i};
+        currentObject = app.potatoObject{potatoIndex};
+        currentVertices = app.potatoVertices{potatoIndex};
+        potatoIndex = potatoIndex + 1;  % Increment potato index only
     end
 
     idleHarvester = [0, 1.25, 0.6];
 
     % Define approach and pickup positions based on produce position.
-    startPos = app.producePositions(i, :) + [0, -0.3, 0.1]; % Approach position.
+    startPos = app.producePositions(i, :) + [0, -0.3, 0.3]; % Approach position.
     pickupPos = app.producePositions(i, :) + pickupOffset; % Exact pickup position.
     
     % Define the drop-off positions at the unsorted box.

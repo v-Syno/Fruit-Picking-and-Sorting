@@ -1,25 +1,35 @@
 function StartSorting(app)
+
+    tomatoIndex = 1;
+    potatoIndex = 1;
+
     % Initialize counters for the good and bad boxes.
     goodBoxCount = 0;
     badBoxCount = 0;
     
-    numProduce = size(app.unsortedBox, 1);
+    numProduce = size(app.producePositions, 1);
     qualityLabels = ProduceClass.RandomizeQuality(numProduce);
     
-    travelHeight = 0.8; % Set a reasonable height for traveling to avoid joint spasms.
+    travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.
     fixedXPos = 0.25; % Fixed X position during travel to ensure a more predictable path.
     
     idleSorter = [0.25, -0.2, 1.0]; % Idle pose;
     
     % Loop through each item in the unsorted box.
-    for i = 1:size(app.unsortedBox, 1)
+    for i = 1:numProduce
         % Determine the object type for each item and select the correct object and vertices.
         if strcmp(app.produceTags{i}, 'Tomatoes')
-            currentObject = app.tomatoObject{i};
-            currentVertices = app.tomatoVertices{i};
+            % currentObject = app.tomatoObject{i};
+            % currentVertices = app.tomatoVertices{i};
+            currentObject = app.tomatoObject{tomatoIndex};
+            currentVertices = app.tomatoVertices{tomatoIndex};
+            tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
         elseif strcmp(app.produceTags{i}, 'Potatoes')
-            currentObject = app.potatoObject{i};
-            currentVertices = app.potatoVertices{i};
+            % currentObject = app.potatoObject{i};
+            % currentVertices = app.potatoVertices{i};
+            currentObject = app.potatoObject{potatoIndex};
+            currentVertices = app.potatoVertices{potatoIndex};
+            potatoIndex = potatoIndex + 1;  % Increment potato index only
         end
     
         % Define starting and hover positions above the item in the unsorted box.
@@ -67,7 +77,7 @@ function StartSorting(app)
         ObjectClass.DropObject(app.sortingBot, currentObject, currentVertices, targetBox);
     
         % Step 8: Move back up to a safe hover position after releasing the object.
-        RobotClass.MoveRobot(app.sortingBot, finalPos + [0, 0, 0.3], app.steps, [], [], false, app.rightSorter, app.leftSorter, app.pointForwards);
+        RobotClass.MoveRobot(app.sortingBot, finalPos + [0, 0, 0.3], app.steps, [], [], false, app.rightSorter, app.leftSorter, app.pointBackwards);
     
         % Step 9: Move to idle position after sorting.
         RobotClass.MoveRobot(app.sortingBot, idleSorter, app.steps, [], [], false, app.rightSorter, app.leftSorter, app.pointDown);
