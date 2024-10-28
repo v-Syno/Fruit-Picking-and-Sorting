@@ -7,7 +7,7 @@ function StartSorting(app)
     goodBoxCount = 0;
     badBoxCount = 0;
     
-    numProduce = size(app.producePositions, 1));
+    numProduce = size(app.producePositions, 1);
     qualityLabels = ProduceClass.RandomizeQuality(numProduce);
     
     travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.

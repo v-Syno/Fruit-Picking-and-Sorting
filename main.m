@@ -196,3 +196,39 @@ for i = 1:numProduce
     % Step 9: Move to idle position after sorting.
     RobotClass.MoveRobot(sortingBot, idleSorter, steps, [], [], false, rightSorter, leftSorter, pointDown);
 end
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        function ProduceButtonGroupSelectionChanged(app, event)
+            selectedButton = app.ProduceButtonGroup.SelectedObject.Text;
+
+            switch selectedButton
+                case 'Tomatoes'
+                    [app.producePositions, app.tomatoObject, app.tomatoVertices, app.produceTags] = ProduceClass.GenerateTomatoes();
+                    disp('Generated Tomatoes.');
+                case 'Potatoes'
+                    [app.producePositions, app.tomatoObject, app.potatoVertices, app.produceTags] = ProduceClass.GeneratePotatoes();
+                    disp('Generated Potatoes.');
+                case 'Mixed'
+                    [app.producePositions, app.potatoObject, app.potatoVertices, app.tomatoObject, app.tomatoVertices, app.produceTags] = ProduceClass.GenerateMix();
+                    disp('Generated Mixed Produce.');
+            end   
+        end
+
+        % Callback function: ProduceButtonGroup, RobotActionButtonGroup
+        function ProduceButtonGroupButtonDown(app, event)
+            selectedAction = app.RobotActionButtonGroup.SelectedObject.Text;
+            switch selectedAction
+                case 'Harvest Only'
+                    disp('Harvester Started.');
+                    StartHarvesting(app);
+                case 'Sort Only'
+                    disp('Sorter Started.');
+                    StartSorting(app);
+                case 'Dual Action'
+                    disp('Dual Action Started.');
+                    StartHarvesting(app);
+                    StartSorting(app);
+            end
+        end

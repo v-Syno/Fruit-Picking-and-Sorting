@@ -11,7 +11,7 @@ potatoIndex = 1;
         % currentVertices = app.tomatoVertices{i};
         currentObject = app.tomatoObject{tomatoIndex};
         currentVertices = app.tomatoVertices{tomatoIndex};
-        tomatoIndex = app.tomatoIndex + 1;  % Increment tomato index only
+        tomatoIndex = tomatoIndex + 1;  % Increment tomato index only
     elseif strcmp(app.produceTags{i}, 'Potatoes')
         EEDirection = app.pointDown;
         pickupOffset = [0, 0, app.gripperLength]; % Offset for potatoes on the ground.
