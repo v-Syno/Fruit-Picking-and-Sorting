@@ -17,7 +17,7 @@ function StartSorting(app)
     qualityLabels = ProduceClass.RandomizeQuality(numProduce);
     
     travelHeight = 1; % Set a reasonable height for traveling to avoid joint spasms.
-    fixedXPos = 0.25; % Fixed X position during travel to ensure a more predictable path.
+    fixedXPos = 0.5; % Fixed X position during travel to ensure a more predictable path.
     
     idleSorter = [0.25, -0.2, 1.0]; % Idle pose;
     
