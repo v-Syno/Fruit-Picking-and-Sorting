@@ -6,7 +6,7 @@ clear;
 clf;
 clc;
 close all;
-set(0,'DefaultFigureWindowStyle','docked')
+% set(0,'DefaultFigureWindowStyle','docked')
 view(3)
 hold on
 axis([-2.5, 2.5, -2.5, 2.5, 0.01, 2]);
@@ -81,18 +81,18 @@ for i = 1:size(producePositions, 1)
     dropOffPos = unsortedBoxEEPos; % Drop-off position.
 
     % Step 1: Move to approach position near the produce.
-    % RobotClass.MoveRobotRMRC(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, EEDirection);
+    RobotClass.MoveRobotRMRC(harvesterBot, startPos, steps, [], [], false, rightHarvester, leftHarvester, EEDirection);
 
     % Step 2: Move directly to the produce and simulate pickup.
     RobotClass.MoveRobotRMRC(harvesterBot, pickupPos, steps, currentObject, currentVertices, false, rightHarvester, leftHarvester, EEDirection);
     RobotClass.GripperMove(rightHarvester, leftHarvester, 'close'); % Simulate gripping.
 
     % Step 3: Move back slightly after gripping.
-    % moveBackPos = pickupPos + [0, -0.1, 0]; % Move back a bit after pickup.
-    % RobotClass.MoveRobotRMRC(harvesterBot, moveBackPos, steps, currentObject, currentVertices, true, rightHarvester, leftHarvester, EEDirection);
+    moveBackPos = pickupPos + [0, -0.1, 0]; % Move back a bit after pickup.
+    RobotClass.MoveRobotRMRC(harvesterBot, moveBackPos, steps, currentObject, currentVertices, true, rightHarvester, leftHarvester, EEDirection);
 
     % Step 4: Move to hover above the unsorted box.
-    % RobotClass.MoveRobotRMRC(harvesterBot, hoverPos, steps, currentObject, currentVertices, true, rightHarvester, leftHarvester, pointBackwards);
+    RobotClass.MoveRobotRMRC(harvesterBot, hoverPos, steps, currentObject, currentVertices, true, rightHarvester, leftHarvester, pointBackwards);
 
     % Step 5: Lower to the drop-off position.
     RobotClass.MoveRobotRMRC(harvesterBot, dropOffPos, steps, currentObject, currentVertices, true, rightHarvester, leftHarvester, pointBackwards);
@@ -102,8 +102,8 @@ for i = 1:size(producePositions, 1)
     ObjectClass.DropObject(harvesterBot, currentObject, currentVertices, unsortedBox(i, :));
 
     % Step 7: Move back up to a safe hover position.
-    % safePos = dropOffPos + [0, 0, 0.2];
-    % RobotClass.MoveRobotRMRC(harvesterBot, safePos, steps, [], [], false, rightHarvester, leftHarvester, pointBackwards);
+    safePos = dropOffPos + [0, 0, 0.2];
+    RobotClass.MoveRobotRMRC(harvesterBot, safePos, steps, [], [], false, rightHarvester, leftHarvester, pointBackwards);
 
 end
     RobotClass.MoveRobotRMRC(harvesterBot, idleHarvester, steps, [], [], false, rightHarvester, leftHarvester, pointForwards);
